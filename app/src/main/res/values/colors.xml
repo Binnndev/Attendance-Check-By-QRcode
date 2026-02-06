@@ -1,5 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
+
+
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="red_primary">#D32F2F</color>
+    <color name="bg_pink">#FCE4EC</color>
+    <color name="text_grey">#757575</color>
+    <color name="stroke_grey">#E0E0E0</color>
+
+<!--    <color name="red_primary">#D32F2F</color>-->
+    <color name="red_dark">#B71C1C</color>
+    <color name="pink_light">#FFCDD2</color>
+    <color name="orange_overlay">#80FF5722</color>
+    <color name="bg_qr">#E57373</color>
 </resources>
