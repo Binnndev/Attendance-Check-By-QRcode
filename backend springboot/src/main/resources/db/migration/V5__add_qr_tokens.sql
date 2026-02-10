@@ -2,7 +2,7 @@ CREATE TABLE qr_tokens (
                            token_id            VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
                            session_id          BINARY(16) NOT NULL,
 
-                           token_hash          VARBINARY(32) NOT NULL, -- SHA-256 = 32 bytes
+                           token_hash          VARBINARY(32) NOT NULL,
 
                            issued_at           DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
                            expires_at          DATETIME(3) NOT NULL,
