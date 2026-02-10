@@ -142,13 +142,13 @@
                         android:gravity="center"
                         android:orientation="vertical">
                         <ImageView
-                            android:layout_width="50dp"
-                            android:layout_height="50dp"
-                            android:src="@android:drawable/ic_input_add"
-                            app:tint="@color/app_primary"/>
+                            android:layout_width="80dp"
+                            android:layout_height="80dp"
+                            android:src="@drawable/icon_join_classroom"
+                            />
                         <TextView
                             android:text="Tham gia"
-                            android:textStyle="bold"
+                            android:fontFamily="sans-serif-medium"
                             android:layout_marginTop="8dp"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"/>
@@ -169,13 +169,13 @@
                         android:gravity="center"
                         android:orientation="vertical">
                         <ImageView
-                            android:layout_width="50dp"
-                            android:layout_height="50dp"
-                            android:src="@android:drawable/ic_menu_edit"
-                            app:tint="@color/app_primary"/>
+                            android:layout_width="80dp"
+                            android:layout_height="80dp"
+                            android:src="@drawable/icon_create_classroom"
+                            />
                         <TextView
                             android:text="Tạo lớp"
-                            android:textStyle="bold"
+                            android:fontFamily="sans-serif-medium"
                             android:layout_marginTop="8dp"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"/>
@@ -196,13 +196,13 @@
                         android:gravity="center"
                         android:orientation="vertical">
                         <ImageView
-                            android:layout_width="50dp"
-                            android:layout_height="50dp"
-                            android:src="@android:drawable/ic_menu_agenda"
-                            app:tint="@color/app_primary"/>
+                            android:layout_width="80dp"
+                            android:layout_height="80dp"
+                            android:src="@drawable/icon_classroom"
+                            />
                         <TextView
                             android:text="Lớp học"
-                            android:textStyle="bold"
+                            android:fontFamily="sans-serif-medium"
                             android:layout_marginTop="8dp"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"/>
@@ -223,13 +223,13 @@
                         android:gravity="center"
                         android:orientation="vertical">
                         <ImageView
-                            android:layout_width="50dp"
-                            android:layout_height="50dp"
-                            android:src="@android:drawable/ic_menu_manage"
-                            app:tint="@color/app_primary"/>
+                            android:layout_width="80dp"
+                            android:layout_height="80dp"
+                            android:src="@drawable/icon_lector"
+                            />
                         <TextView
-                            android:text="Lớp dạy"
-                            android:textStyle="bold"
+                            android:text="Lớp giảng"
+                            android:fontFamily="sans-serif-medium"
                             android:layout_marginTop="8dp"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"/>
@@ -242,8 +242,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Lớp học sắp tới"
-                android:textStyle="bold"
-                android:textSize="16sp"
+                android:fontFamily="sans-serif-medium"
+                android:textSize="14sp"
                 android:layout_marginStart="24dp"
                 android:layout_marginTop="16dp"
                 app:layout_constraintTop_toBottomOf="@id/gridMenu"

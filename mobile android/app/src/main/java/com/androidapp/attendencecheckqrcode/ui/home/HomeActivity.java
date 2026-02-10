@@ -316,7 +316,8 @@ public class HomeActivity extends AppCompatActivity {
 
     private void updateCurrentDate() {
         Date currentDate = new Date();
-        SimpleDateFormat sdf = new SimpleDateFormat("EEEE dd/MM", new Locale("vi", "VN"));
+        // Định dạng: "Thứ Hai 15/01 - 12:34"
+        SimpleDateFormat sdf = new SimpleDateFormat("EEEE dd/MM - HH:mm", new Locale("vi", "VN"));
         String dateString = sdf.format(currentDate);
         String finalString = "📅 HÔM NAY, " + dateString.toUpperCase();
 
