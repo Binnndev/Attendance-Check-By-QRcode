@@ -12,4 +12,10 @@
 /captures
 .externalNativeBuild
 .cxx
+
+# Chặn file rác của Android
+.gradle/
+build/
+app/build/
 local.properties
+.idea/
