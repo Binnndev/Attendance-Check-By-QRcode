@@ -9,9 +9,42 @@
     <color name="text_grey">#757575</color>
     <color name="stroke_grey">#E0E0E0</color>
 
-<!--    <color name="red_primary">#D32F2F</color>-->
+    <!--    <color name="red_primary">#D32F2F</color>-->
     <color name="red_dark">#B71C1C</color>
     <color name="pink_light">#FFCDD2</color>
     <color name="orange_overlay">#80FF5722</color>
     <color name="bg_qr">#E57373</color>
+    <!--    color home-->
+    <color name="app_primary">#B71C1C</color>
+    <color name="app_bg">#FFFBFB</color>
+    <!--    <color name="white">#FFFFFF</color>-->
+    <!--    <color name="black">#000000</color>-->
+    <color name="gray_text">#757575</color>
+
+    <color name="status_green_bg">#B9F6CA</color>
+    <color name="status_green_text">#00C853</color>
+    <color name="status_red_bg">#FFCCBC</color>
+    <color name="status_red_text">#D84315</color>
+
+    <!--    <color name="app_primary">#B71C1C</color> <color name="app_bg">#FFFBFB</color>-->
+
+    <color name="qr_ring">#FFEBEE</color>
+    <color name="bottom_nav_icon_default">#9E9E9E</color>
+    <!--    <color name="app_primary">#B71C1C</color> -->
+    <color name="qr_ring_color">#FFEBEE</color>
+    <!--    <color name="white">#FFFFFF</color>-->
+    <!--    <color name="app_primary">#B71C1C</color>-->
+    <color name="class_card_bg">#FFF8F8</color>
+    <color name="badge_gray">#EEEEEE</color>
+    <color name="text_gray">#757575</color>
+
+    <!--    class detail-->
+    <!--    <color name="app_primary">#B71C1C</color>-->
+    <!--    <color name="white">#FFFFFF</color>-->
+
+    <!--    <color name="status_green_bg">#B9F6CA</color>-->
+    <!--    <color name="status_green_text">#00C853</color>-->
+    <!--    <color name="status_red_bg">#FFCCBC</color>-->
+    <!--    <color name="status_red_text">#D84315</color>-->
+    <color name="gray_bg_icon">#F5F5F5</color>
 </resources>

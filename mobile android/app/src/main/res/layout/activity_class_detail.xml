@@ -1,0 +1,669 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F8F9FA">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingBottom="50dp">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <View
+                android:id="@+id/viewHeaderBg"
+                android:layout_width="match_parent"
+                android:layout_height="280dp"
+                android:background="@drawable/bg_header_home"
+                app:layout_constraintTop_toTopOf="parent"/>
+
+            <ImageView
+                android:id="@+id/btnBack"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:src="@android:drawable/ic_menu_revert"
+                app:tint="@color/white"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"/>
+
+            <TextView
+                android:id="@+id/tvSubjectCode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="INT1348"
+                android:background="@drawable/bg_badge_gray"
+                android:backgroundTint="#80FFFFFF"
+                android:textColor="@color/white"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="4dp"
+                android:textSize="12sp"
+                android:layout_marginTop="20dp"
+                app:layout_constraintStart_toStartOf="@id/btnBack"
+                app:layout_constraintTop_toBottomOf="@id/btnBack"
+                />
+
+            <TextView
+                android:id="@+id/tvStudentCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="● 45 Sinh viên"
+                android:textColor="@color/white"
+                android:textSize="12sp"
+                android:layout_marginStart="15dp"
+
+                app:layout_constraintStart_toEndOf="@id/tvSubjectCode"
+                app:layout_constraintTop_toTopOf="@id/tvSubjectCode"
+                app:layout_constraintBottom_toBottomOf="@id/tvSubjectCode"/>
+
+            <TextView
+                android:id="@+id/tvClassName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Lập trình Android"
+                android:textColor="@color/white"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:layout_marginTop="10dp"
+                app:layout_constraintStart_toStartOf="@id/tvSubjectCode"
+                app:layout_constraintTop_toBottomOf="@id/tvSubjectCode"/>
+
+            <TextView
+                android:id="@+id/tvLecturer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Th.S Nguyễn Trung Hiếu"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:layout_marginTop="10dp"
+                app:drawableStartCompat="@android:drawable/ic_menu_my_calendar"
+                app:drawableTint="@color/white"
+                android:drawablePadding="8dp"
+                app:layout_constraintStart_toStartOf="@id/tvClassName"
+                app:layout_constraintTop_toBottomOf="@id/tvClassName"/>
+
+            <TextView
+                android:id="@+id/tvClassCode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="D22CQCNPM02-N"
+                android:textColor="#E0E0E0"
+                android:textSize="13sp"
+                android:layout_marginTop="10dp"
+                android:layout_marginStart="30dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvLecturer"/>
+
+            <TextView
+                android:id="@+id/tvSemester"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="HK2, 2025 - 2026"
+                android:textColor="#E0E0E0"
+                android:textSize="13sp"
+                android:layout_marginTop="5dp"
+                app:layout_constraintStart_toStartOf="@id/tvClassCode"
+                app:layout_constraintTop_toBottomOf="@id/tvClassCode"/>
+
+            <TextView
+                android:id="@+id/tvTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="07:00 - 10:30"
+                android:textColor="#E0E0E0"
+                android:textSize="13sp"
+                android:layout_marginStart="80dp"
+                app:layout_constraintStart_toEndOf="@id/tvClassCode"
+                app:layout_constraintTop_toTopOf="@id/tvClassCode"/>
+
+            <TextView
+                android:id="@+id/tvRoom"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2A27 - Thủ Đức"
+                android:textColor="#E0E0E0"
+                android:textSize="13sp"
+                app:layout_constraintStart_toStartOf="@id/tvTime"
+                app:layout_constraintTop_toTopOf="@id/tvSemester"/>
+
+
+<!--            <androidx.constraintlayout.widget.ConstraintLayout-->
+<!--                android:id="@+id/layoutStats"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_marginTop="40dp"-->
+<!--                android:paddingHorizontal="40dp"-->
+<!--                app:layout_constraintTop_toBottomOf="@id/viewHeaderBg">-->
+<!--                -->
+<!--                <ProgressBar-->
+<!--                    android:id="@+id/progressBar"-->
+<!--                    android:layout_width="120dp"-->
+<!--                    android:layout_height="120dp"-->
+<!--                    android:indeterminateOnly="false"-->
+<!--                    android:progressDrawable="@drawable/circular_progress"-->
+<!--                    android:progress="83"-->
+<!--                    android:background="@drawable/bg_circle_white"-->
+<!--                    app:layout_constraintTop_toTopOf="parent"-->
+<!--                    app:layout_constraintStart_toStartOf="parent"-->
+<!--                    app:layout_constraintEnd_toEndOf="parent"/>-->
+
+<!--                <TextView-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:text="83%"-->
+<!--                    android:textSize="22sp"-->
+<!--                    android:textStyle="bold"-->
+<!--                    android:textColor="#333"-->
+<!--                    app:layout_constraintBottom_toTopOf="@+id/tvLabelRate"-->
+<!--                    app:layout_constraintEnd_toEndOf="@+id/progressBar"-->
+<!--                    app:layout_constraintStart_toStartOf="@+id/progressBar"-->
+<!--                    app:layout_constraintTop_toTopOf="@+id/progressBar"-->
+<!--                    app:layout_constraintVertical_chainStyle="packed"/>-->
+
+<!--                <TextView-->
+<!--                    android:id="@+id/tvLabelRate"-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:text="Tỷ lệ điểm danh"-->
+<!--                    android:textSize="10sp"-->
+<!--                    android:textColor="#757575"-->
+<!--                    app:layout_constraintBottom_toBottomOf="@+id/progressBar"-->
+<!--                    app:layout_constraintEnd_toEndOf="@+id/progressBar"-->
+<!--                    app:layout_constraintStart_toStartOf="@+id/progressBar"-->
+<!--                    app:layout_constraintTop_toBottomOf="@+id/textViewPercent" />-->
+
+<!--                <androidx.cardview.widget.CardView-->
+<!--                    android:layout_width="80dp"-->
+<!--                    android:layout_height="80dp"-->
+<!--                    app:cardCornerRadius="12dp"-->
+<!--                    app:cardElevation="4dp"-->
+<!--                    android:layout_marginEnd="10dp"-->
+<!--                    app:layout_constraintEnd_toStartOf="@id/progressBar"-->
+<!--                    app:layout_constraintTop_toTopOf="@id/progressBar">-->
+<!--                    <LinearLayout-->
+<!--                        android:layout_width="match_parent"-->
+<!--                        android:layout_height="match_parent"-->
+<!--                        android:gravity="center"-->
+<!--                        android:orientation="vertical">-->
+<!--                        <ImageView-->
+<!--                            android:layout_width="24dp"-->
+<!--                            android:layout_height="24dp"-->
+<!--                            android:src="@android:drawable/ic_menu_my_calendar" app:tint="#2196F3"/>-->
+<!--                        <TextView-->
+<!--                            android:text="11"-->
+<!--                            android:textStyle="bold"-->
+<!--                            android:textSize="18sp"-->
+<!--                            android:layout_width="wrap_content"-->
+<!--                            android:layout_height="wrap_content"-->
+<!--                            />-->
+<!--                        <TextView-->
+<!--                            android:text="Tổng số buổi"-->
+<!--                            android:textSize="9sp"-->
+<!--                            android:layout_width="wrap_content"-->
+<!--                            android:layout_height="wrap_content"-->
+<!--                            />-->
+<!--                    </LinearLayout>-->
+<!--                </androidx.cardview.widget.CardView>-->
+
+<!--                <androidx.cardview.widget.CardView-->
+<!--                    android:layout_width="80dp"-->
+<!--                    android:layout_height="80dp"-->
+<!--                    app:cardCornerRadius="12dp"-->
+<!--                    app:cardElevation="4dp"-->
+<!--                    android:layout_marginTop="10dp"-->
+<!--                    android:layout_marginEnd="10dp"-->
+<!--                    app:layout_constraintEnd_toStartOf="@id/progressBar"-->
+<!--                    app:layout_constraintTop_toBottomOf="@id/progressBar"-->
+<!--                    app:layout_constraintBottom_toBottomOf="@id/progressBar">-->
+<!--                    <LinearLayout-->
+<!--                        android:layout_width="match_parent"-->
+<!--                        android:layout_height="match_parent"-->
+<!--                        android:gravity="center"-->
+<!--                        android:orientation="vertical">-->
+<!--                        <ImageView android:layout_width="24dp" android:layout_height="24dp"-->
+<!--                            android:src="@android:drawable/ic_delete" app:tint="#F44336"/>-->
+<!--                        <TextView-->
+<!--                            android:text="1"-->
+<!--                            android:textStyle="bold"-->
+<!--                            android:textSize="18sp"-->
+<!--                            android:layout_width="wrap_content"-->
+<!--                            android:layout_height="wrap_content"-->
+<!--                            />-->
+<!--                        <TextView-->
+<!--                            android:text="Vắng mặt"-->
+<!--                            android:textSize="9sp"-->
+<!--                            android:layout_width="wrap_content"-->
+<!--                            android:layout_height="wrap_content"-->
+<!--                            />-->
+<!--                    </LinearLayout>-->
+<!--                </androidx.cardview.widget.CardView>-->
+
+<!--                <androidx.cardview.widget.CardView-->
+<!--                    android:layout_width="80dp"-->
+<!--                    android:layout_height="80dp"-->
+<!--                    app:cardCornerRadius="12dp"-->
+<!--                    app:cardElevation="4dp"-->
+<!--                    android:layout_marginStart="10dp"-->
+<!--                    app:layout_constraintStart_toEndOf="@id/progressBar"-->
+<!--                    app:layout_constraintTop_toTopOf="@id/progressBar">-->
+<!--                    <LinearLayout-->
+<!--                        android:layout_width="match_parent"-->
+<!--                        android:layout_height="match_parent"-->
+<!--                        android:gravity="center"-->
+<!--                        android:orientation="vertical">-->
+<!--                        <ImageView android:layout_width="24dp" android:layout_height="24dp"-->
+<!--                            android:src="@android:drawable/checkbox_on_background" app:tint="#4CAF50"/>-->
+<!--                        <TextView-->
+<!--                            android:text="7"-->
+<!--                            android:textStyle="bold"-->
+<!--                            android:textSize="18sp"-->
+<!--                            android:layout_width="wrap_content"-->
+<!--                            android:layout_height="wrap_content"-->
+<!--                            />-->
+<!--                        <TextView-->
+<!--                            android:text="Đã tham gia"-->
+<!--                            android:textSize="9sp"-->
+<!--                            android:layout_width="wrap_content"-->
+<!--                            android:layout_height="wrap_content"-->
+<!--                            />-->
+<!--                    </LinearLayout>-->
+<!--                </androidx.cardview.widget.CardView>-->
+
+<!--                <androidx.cardview.widget.CardView-->
+<!--                    android:layout_width="80dp"-->
+<!--                    android:layout_height="80dp"-->
+<!--                    app:cardCornerRadius="12dp"-->
+<!--                    app:cardElevation="4dp"-->
+<!--                    android:layout_marginTop="10dp"-->
+<!--                    android:layout_marginStart="10dp"-->
+<!--                    app:layout_constraintStart_toEndOf="@id/progressBar"-->
+<!--                    app:layout_constraintTop_toBottomOf="@id/progressBar"-->
+<!--                    app:layout_constraintBottom_toBottomOf="@id/progressBar">-->
+<!--                    <LinearLayout-->
+<!--                        android:layout_width="match_parent"-->
+<!--                        android:layout_height="match_parent"-->
+<!--                        android:gravity="center"-->
+<!--                        android:orientation="vertical">-->
+<!--                        <ImageView-->
+<!--                            android:layout_width="24dp"-->
+<!--                            android:layout_height="24dp"-->
+<!--                            android:src="@android:drawable/ic_lock_idle_alarm"-->
+<!--                            app:tint="#757575"-->
+<!--                            />-->
+<!--                        <TextView-->
+<!--                            android:text="3"-->
+<!--                            android:textStyle="bold"-->
+<!--                            android:textSize="18sp"-->
+<!--                            android:layout_width="wrap_content"-->
+<!--                            android:layout_height="wrap_content"-->
+<!--                            />-->
+<!--                        <TextView-->
+<!--                            android:text="Sắp tới"-->
+<!--                            android:textSize="9sp"-->
+<!--                            android:layout_width="wrap_content"-->
+<!--                            android:layout_height="wrap_content"-->
+<!--                            />-->
+<!--                    </LinearLayout>-->
+<!--                </androidx.cardview.widget.CardView>-->
+
+<!--            </androidx.constraintlayout.widget.ConstraintLayout>-->
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/layoutStats"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="30dp"
+                android:paddingHorizontal="20dp"
+                app:layout_constraintTop_toBottomOf="@id/viewHeaderBg">
+
+                <!-- ProgressBar ở giữa -->
+                <ProgressBar
+                    android:id="@+id/progressBar"
+                    android:layout_width="150dp"
+                    android:layout_height="150dp"
+                    android:progress="83"
+                    android:indeterminateOnly="false"
+                    android:progressDrawable="@drawable/circular_progress"
+                    android:background="@drawable/bg_circle_white"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintVertical_bias="0.5"
+                    />
+
+                <TextView
+                    android:id="@+id/textViewPercent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="83%"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:textColor="#333"
+                    app:layout_constraintTop_toTopOf="@id/progressBar"
+                    app:layout_constraintBottom_toBottomOf="@id/progressBar"
+                    app:layout_constraintStart_toStartOf="@id/progressBar"
+                    app:layout_constraintEnd_toEndOf="@id/progressBar"
+                    />
+
+                <!-- CardView trên bên trái -->
+                <androidx.cardview.widget.CardView
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:layout_marginEnd="5dp"
+                    android:layout_marginBottom="5dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="4dp"
+
+                    app:layout_constraintEnd_toStartOf="@id/progressBar"
+                    app:layout_constraintBottom_toTopOf="@id/progressBar"
+                    app:layout_constraintTop_toTopOf="parent"
+                    >
+                    <!-- Nội dung -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:orientation="vertical">
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@android:drawable/ic_menu_my_calendar"
+                            app:tint="#2196F3"
+                            />
+                        <TextView
+                            android:text="11"
+                            android:textStyle="bold"
+                            android:textSize="18sp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            />
+                        <TextView
+                            android:text="Tổng số buổi"
+                            android:textSize="9sp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            />
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <!-- CardView dưới bên trái -->
+                <androidx.cardview.widget.CardView
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="4dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginEnd="5dp"
+                    android:layout_marginBottom="15dp"
+                    app:layout_constraintEnd_toStartOf="@id/progressBar"
+                    app:layout_constraintTop_toBottomOf="@id/progressBar"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                >
+                    <!-- Nội dung -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:orientation="vertical">
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@android:drawable/ic_delete"
+                            app:tint="#F44336"
+                            />
+                        <TextView
+                            android:text="1"
+                            android:textStyle="bold"
+                            android:textSize="18sp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            />
+                        <TextView
+                            android:text="Vắng mặt"
+                            android:textSize="9sp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            />
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <!-- CardView trên bên phải -->
+                <androidx.cardview.widget.CardView
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="4dp"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginBottom="5dp"
+                    app:layout_constraintStart_toEndOf="@id/progressBar"
+                    app:layout_constraintBottom_toTopOf="@id/progressBar"
+                    app:layout_constraintTop_toTopOf="parent"
+                    >
+                    <!-- Nội dung -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:orientation="vertical">
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@android:drawable/checkbox_on_background"
+                            app:tint="#4CAF50"/>
+                        <TextView
+                            android:text="7"
+                            android:textStyle="bold"
+                            android:textSize="18sp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            />
+                        <TextView
+                            android:text="Đã tham gia"
+                            android:textSize="9sp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            />
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <!-- CardView dưới bên phải -->
+                <androidx.cardview.widget.CardView
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="4dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginBottom="15dp"
+                    app:layout_constraintStart_toEndOf="@id/progressBar"
+                    app:layout_constraintTop_toBottomOf="@id/progressBar"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    >
+                    <!-- Nội dung -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:orientation="vertical">
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@android:drawable/ic_lock_idle_alarm"
+                            app:tint="#757575"
+                            />
+                        <TextView
+                            android:text="3"
+                            android:textStyle="bold"
+                            android:textSize="18sp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            />
+                        <TextView
+                            android:text="Sắp tới"
+                            android:textSize="9sp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            />
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cvWarning"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="25dp"
+                app:cardCornerRadius="15dp"
+                app:cardElevation="2dp"
+                app:layout_constraintTop_toBottomOf="@id/layoutStats">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="15dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:text="Số buổi vắng còn lại"
+                        android:textStyle="bold"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        />
+
+                    <ImageView
+                        android:src="@android:drawable/ic_delete"
+                        app:tint="#EF9A9A"
+                        android:background="@drawable/bg_badge_gray"
+                        android:padding="5dp"
+                        android:layout_width="40dp"
+                        android:layout_height="30dp"
+                        android:layout_marginEnd="5dp"
+                        />
+                    <View
+                        android:background="@drawable/bg_badge_gray"
+                        android:layout_width="40dp"
+                        android:layout_height="30dp"
+                        android:layout_marginEnd="5dp"/>
+                    <View
+                        android:background="@drawable/bg_badge_gray"
+                        android:layout_width="40dp"
+                        android:layout_height="30dp"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cvQRAction"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="30dp"
+                app:cardCornerRadius="15dp"
+                app:cardElevation="4dp"
+                app:layout_constraintTop_toBottomOf="@id/cvWarning">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp"
+
+                    android:gravity="center">
+
+                    <TextView
+                        android:text="Điểm danh ngay"
+                        android:textStyle="bold"
+                        android:textSize="18sp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+                    <TextView
+                        android:text="Đang diễn ra: 07:00 - 10:30"
+                        android:textSize="12sp"
+                        android:textColor="#757575"
+                        android:layout_marginBottom="15dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnScanQR"
+                        android:layout_width="match_parent"
+                        android:layout_height="60dp"
+                        android:text="Quét mã QR"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        app:icon="@drawable/ic_qr"
+                        app:iconGravity="textStart"
+                        app:cornerRadius="30dp"
+                        app:iconSize="30dp"
+                        app:iconPadding="8dp"
+                        app:backgroundTint="@color/app_primary"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <TextView
+                android:id="@+id/tvHistoryTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🕒 Lịch sử điểm danh"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="30dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/cvQRAction"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="10dp"
+                app:layout_constraintTop_toBottomOf="@id/tvHistoryTitle">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingVertical="10dp"
+                    android:gravity="center_vertical">
+                    <ImageView android:src="@android:drawable/radiobutton_on_background" app:tint="#4CAF50"
+                        android:layout_width="20dp" android:layout_height="20dp" android:layout_marginEnd="10dp"/>
+                    <TextView android:text="04/02/2026" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                    <TextView android:text="08:30" android:layout_marginStart="20dp" android:layout_weight="1" android:layout_width="0dp" android:layout_height="wrap_content"/>
+                    <TextView android:text="Có mặt" android:background="@drawable/bg_status_green" android:textColor="@color/status_green_text"
+                        android:textSize="12sp" android:paddingHorizontal="10dp" android:paddingVertical="4dp"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                </LinearLayout>
+
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#EEEEEE"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingVertical="10dp"
+                    android:gravity="center_vertical">
+                    <ImageView android:src="@android:drawable/radiobutton_on_background" app:tint="#F44336"
+                        android:layout_width="20dp" android:layout_height="20dp" android:layout_marginEnd="10dp"/>
+                    <TextView android:text="27/01/2026" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                    <TextView android:text="07:00" android:layout_marginStart="20dp" android:layout_weight="1" android:layout_width="0dp" android:layout_height="wrap_content"/>
+                    <TextView android:text="Vắng mặt" android:background="@drawable/bg_status_red" android:textColor="@color/status_red_text"
+                        android:textSize="12sp" android:paddingHorizontal="10dp" android:paddingVertical="4dp"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                </LinearLayout>
+            </LinearLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

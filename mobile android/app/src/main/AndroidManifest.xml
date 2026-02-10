@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-<!--thêm quyền truy cập Camera-->
+    <!--thêm quyền truy cập Camera-->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature
         android:name="android.hardware.camera"
@@ -29,9 +29,9 @@
         <activity
             android:name=".ui.clazz.CreateClassActivity"
             android:exported="false" />
-        <activity
-            android:name=".ui.attendance.AttendanceActivity"
-            android:exported="false" />
+        <!--        <activity-->
+        <!--            android:name=".ui.attendance.AttendanceActivity"-->
+        <!--            android:exported="false" />-->
         <activity
             android:name=".ui.home.HomeActivity"
             android:exported="false" /> <!-- <activity -->
@@ -51,11 +51,17 @@
         </activity>
 
         <!-- CAM Qr Code -->
-<!--        <uses-permission android:name="android.permission.CAMERA" />-->
+        <!--        <uses-permission android:name="android.permission.CAMERA" />-->
 
-<!--        <uses-feature-->
-<!--            android:name="android.hardware.camera"-->
-<!--            android:required="false" />-->
+        <!--        <uses-feature-->
+        <!--            android:name="android.hardware.camera"-->
+        <!--            android:required="false" />-->
+        <activity android:name=".ui.clazz.ClassListActivity" />
+        <activity android:name=".ui.clazz.ClassDetailActivity" />
+
+        <activity android:name=".ui.teaching.TeachingListActivity" />
+        <activity android:name=".ui.teaching.TeachingDetailActivity" />
+        <activity android:name=".ui.teaching.CreateQRActivity" />
     </application>
 
 </manifest>

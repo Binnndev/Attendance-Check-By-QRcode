@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F8F9FA">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingBottom="50dp">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <View
+                android:id="@+id/viewHeaderBg"
+                android:layout_width="match_parent"
+                android:layout_height="250dp"
+                android:background="@drawable/bg_header_home"
+                app:layout_constraintTop_toTopOf="parent"/>
+
+            <ImageView
+                android:id="@+id/btnBack"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:src="@android:drawable/ic_menu_revert"
+                app:tint="@color/white"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"/>
+
+            <TextView
+                android:id="@+id/tvSubjectCode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="INT1348"
+                android:background="@drawable/bg_badge_gray"
+                android:backgroundTint="#80FFFFFF"
+                android:textColor="@color/white"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="4dp"
+                android:textSize="12sp"
+                android:layout_marginTop="20dp"
+                app:layout_constraintStart_toStartOf="@id/btnBack"
+                app:layout_constraintTop_toBottomOf="@id/btnBack"/>
+
+            <TextView
+                android:id="@+id/tvStudentCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="● 45 Sinh viên"
+                android:textColor="@color/white"
+                android:textSize="12sp"
+                android:layout_marginStart="15dp"
+                app:layout_constraintStart_toEndOf="@id/tvSubjectCode"
+                app:layout_constraintTop_toTopOf="@id/tvSubjectCode"
+                app:layout_constraintBottom_toBottomOf="@id/tvSubjectCode"/>
+
+            <TextView
+                android:id="@+id/tvClassName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Lập trình Android"
+                android:textColor="@color/white"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:layout_marginTop="10dp"
+                app:layout_constraintStart_toStartOf="@id/tvSubjectCode"
+                app:layout_constraintTop_toBottomOf="@id/tvSubjectCode"/>
+
+            <TextView
+                android:id="@+id/tvLecturer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tôi (Giáo viên)"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:layout_marginTop="10dp"
+                app:drawableStartCompat="@android:drawable/ic_menu_my_calendar"
+                app:drawableTint="@color/white"
+                android:drawablePadding="8dp"
+                app:layout_constraintStart_toStartOf="@id/tvClassName"
+                app:layout_constraintTop_toBottomOf="@id/tvClassName"/>
+
+            <TextView
+                android:id="@+id/tvClassCode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="D22CQCNPM02-N"
+                android:textColor="#E0E0E0"
+                android:textSize="13sp"
+                android:layout_marginTop="10dp"
+                android:layout_marginStart="30dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvLecturer"/>
+
+            <TextView
+                android:id="@+id/tvTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="07:00 - 10:30"
+                android:textColor="#E0E0E0"
+                android:textSize="13sp"
+                android:layout_marginStart="40dp"
+                app:layout_constraintStart_toEndOf="@id/tvClassCode"
+                app:layout_constraintTop_toTopOf="@id/tvClassCode"/>
+
+            <TextView
+                android:id="@+id/tvSemester"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="HK2, 2025 - 2026"
+                android:textColor="#E0E0E0"
+                android:textSize="13sp"
+                android:layout_marginTop="5dp"
+                app:layout_constraintStart_toStartOf="@id/tvClassCode"
+                app:layout_constraintTop_toBottomOf="@id/tvClassCode"/>
+
+            <TextView
+                android:id="@+id/tvRoom"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2A27 - Thủ Đức"
+                android:textColor="#E0E0E0"
+                android:textSize="13sp"
+                app:layout_constraintStart_toStartOf="@id/tvTime"
+                app:layout_constraintTop_toTopOf="@id/tvSemester"/>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cvCreateQR"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="20dp"
+                app:cardCornerRadius="15dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="@color/white"
+                app:layout_constraintTop_toBottomOf="@id/viewHeaderBg">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="24dp"
+                    android:gravity="center">
+
+                    <TextView
+                        android:text="Bắt đầu buổi học mới"
+                        android:textStyle="bold"
+                        android:textSize="18sp"
+                        android:textColor="@color/black"
+                        android:layout_marginBottom="20dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnCreateQR"
+                        android:layout_width="match_parent"
+                        android:layout_height="60dp"
+                        android:text="Tạo mã điểm danh"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        app:icon="@drawable/ic_qr"
+                        app:iconSize="30dp"
+                        app:iconGravity="textStart"
+                        app:cornerRadius="30dp"
+                        app:backgroundTint="#D32F2F"/>
+
+                    <TextView
+                        android:text="Mã qr sẽ tự động làm mới mỗi 5s để chống gian lận"
+                        android:textSize="12sp"
+                        android:textColor="#757575"
+                        android:gravity="center"
+                        android:layout_marginTop="15dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <TextView
+                android:id="@+id/tvHistoryTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🕒 Lịch sử điểm danh"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:textColor="@color/black"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="25dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/cvCreateQR"/>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="15dp"
+                app:layout_constraintTop_toBottomOf="@id/tvHistoryTitle">
+
+                <View
+                    android:id="@+id/viewLine"
+                    android:layout_width="2dp"
+                    android:layout_height="0dp"
+                    android:background="#E0E0E0"
+                    android:layout_marginStart="8dp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/itemToday"
+                    app:layout_constraintBottom_toBottomOf="parent"/>
+
+                <ImageView
+                    android:id="@+id/dotToday"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/shape_dot_green"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/itemToday"
+                    app:layout_constraintBottom_toBottomOf="@id/itemToday"/>
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/itemToday"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    app:cardCornerRadius="10dp"
+                    app:cardElevation="1dp"
+                    app:cardBackgroundColor="@color/white"
+                    android:layout_marginStart="15dp"
+                    android:layout_marginBottom="15dp"
+                    app:layout_constraintStart_toEndOf="@id/dotToday"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="12dp"
+                        android:gravity="center_vertical">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Hôm nay" android:textSize="10sp" android:textColor="#9E9E9E"/>
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="T3" android:textStyle="bold" android:textSize="16sp" android:textColor="#333"/>
+                        </LinearLayout>
+
+                        <View android:layout_width="1dp" android:layout_height="30dp" android:background="#EEEEEE" android:layout_marginHorizontal="15dp"/>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="04/02/2026"
+                                android:textStyle="bold"
+                                android:textColor="#333"/>
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="08:00" android:textSize="12sp" android:textColor="#757575"/>
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="👥 0 Vắng"
+                            android:textSize="12sp"
+                            android:textColor="#555"/>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <ImageView
+                    android:id="@+id/dotYesterday"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/shape_dot_red"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/itemYesterday"
+                    app:layout_constraintBottom_toBottomOf="@id/itemYesterday"/>
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/itemYesterday"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    app:cardCornerRadius="10dp"
+                    app:cardElevation="1dp"
+                    app:cardBackgroundColor="@color/white"
+                    android:layout_marginStart="15dp"
+                    android:layout_marginTop="15dp"
+                    app:layout_constraintStart_toEndOf="@id/dotYesterday"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/itemToday">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="12dp"
+                        android:gravity="center_vertical">
+                        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Hôm qua"
+                                android:textSize="10sp"
+                                android:textColor="#9E9E9E"/>
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="T2"
+                                android:textStyle="bold"
+                                android:textSize="16sp"
+                                android:textColor="#333"/>
+                        </LinearLayout>
+                        <View android:layout_width="1dp" android:layout_height="30dp" android:background="#EEEEEE" android:layout_marginHorizontal="15dp"/>
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="03/02/2026"
+                                android:textStyle="bold"
+                                android:textColor="#333"/>
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="10:00"
+                                android:textSize="12sp"
+                                android:textColor="#757575"/>
+                        </LinearLayout>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="👥 5 Vắng"
+                            android:textSize="12sp"
+                            android:textColor="#555"/>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

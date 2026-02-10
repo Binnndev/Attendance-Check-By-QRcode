@@ -1,8 +1,10 @@
 package com.androidapp.attendencecheckqrcode.ui.signup;
 
 import android.app.DatePickerDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
+import android.text.TextUtils;
 import android.text.method.HideReturnsTransformationMethod;
 import android.text.method.PasswordTransformationMethod;
 import android.view.View;
@@ -16,23 +18,24 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.androidapp.attendencecheckqrcode.R;
+import com.androidapp.attendencecheckqrcode.models.User;
+import com.androidapp.attendencecheckqrcode.ui.login.LoginActivity;
+import com.androidapp.attendencecheckqrcode.utils.MockData;
 
 import java.util.Calendar;
 
+// [FUTURE API] import retrofit2.Call...
+
 public class SignUpActivity extends AppCompatActivity {
 
-    // Khai báo các biến View
-    private ImageView btnBack;
+    private ImageView btnBack, btnShowPass;
     private TextView tvLoginLink;
-    private EditText etDob;
-
-    // --- 1. Khai báo thêm các biến mới ---
-    private EditText etPassword;
-    private ImageView btnShowPass;
     private Button btnSignUp;
-    private LinearLayout btnGoogle; // Nút Google trong XML là LinearLayout
+    private LinearLayout btnGoogle;
 
-    // Biến cờ để theo dõi trạng thái ẩn/hiện mật khẩu
+    // Các trường nhập liệu
+    private EditText etFirstName, etLastName, etEmail, etDob, etPhone, etPassword;
+
     private boolean isPasswordVisible = false;
 
     @Override
@@ -40,106 +43,88 @@ public class SignUpActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_up);
 
-        // Ẩn Action Bar
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().hide();
-        }
+        if (getSupportActionBar() != null) getSupportActionBar().hide();
 
         initViews();
         setupListeners();
     }
 
     private void initViews() {
-        // Ánh xạ các view cũ
         btnBack = findViewById(R.id.btnBack);
         tvLoginLink = findViewById(R.id.tvLoginLink);
-        etDob = findViewById(R.id.etDob);
 
-        // --- 2. Ánh xạ các view mới ---
+        // Ánh xạ View (Đảm bảo file XML đã có các ID này)
+        etFirstName = findViewById(R.id.etFirstName);
+        etLastName = findViewById(R.id.etLastName);
+        etEmail = findViewById(R.id.etEmail);
+        etPhone = findViewById(R.id.etPhone); // Cần thêm EditText này vào XML
+        etDob = findViewById(R.id.etDob);
         etPassword = findViewById(R.id.etPassword);
+
         btnShowPass = findViewById(R.id.btnShowPass);
         btnSignUp = findViewById(R.id.btnSignUp);
         btnGoogle = findViewById(R.id.btnGoogle);
     }
 
     private void setupListeners() {
-        // Xử lý nút Back
-        btnBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
+        btnBack.setOnClickListener(v -> finish());
+        tvLoginLink.setOnClickListener(v -> finish());
+        etDob.setOnClickListener(v -> showDatePicker());
+
+        // Ẩn/Hiện mật khẩu
+        btnShowPass.setOnClickListener(v -> {
+            if (isPasswordVisible) {
+                etPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+            } else {
+                etPassword.setInputType(InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
             }
+            etPassword.setSelection(etPassword.getText().length());
+            isPasswordVisible = !isPasswordVisible;
         });
 
-        // Xử lý link Login
-        tvLoginLink.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
+        // Xử lý Đăng ký
+        btnSignUp.setOnClickListener(v -> handleSignUp());
+    }
 
-        // Xử lý chọn ngày sinh
-        etDob.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showDatePicker();
-            }
-        });
+    private void handleSignUp() {
+        String firstName = etFirstName.getText().toString().trim();
+        String lastName = etLastName.getText().toString().trim();
+        String email = etEmail.getText().toString().trim();
+        String phone = etPhone.getText().toString().trim();
+        String dob = etDob.getText().toString().trim();
+        String password = etPassword.getText().toString().trim();
 
-        // --- 3. Sự kiện Click nút Đăng Ký (Sign Up) ---
-        btnSignUp.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Ở đây bạn có thể thêm logic kiểm tra dữ liệu (validation) trước khi thông báo
-                // Ví dụ: if (etEmail.getText().toString().isEmpty()) { ... }
+        // 1. Validation (Kiểm tra dữ liệu)
+        if (TextUtils.isEmpty(firstName) || TextUtils.isEmpty(lastName) ||
+                TextUtils.isEmpty(email) || TextUtils.isEmpty(password) ||
+                TextUtils.isEmpty(phone)) {
+            Toast.makeText(this, "Vui lòng điền đủ tất cả các trường!", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-                Toast.makeText(SignUpActivity.this, "Đăng ký thành công!", Toast.LENGTH_SHORT).show();
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            Toast.makeText(this, "Email không hợp lệ!", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-                // Sau khi đăng ký thành công thì có thể đóng màn hình này hoặc chuyển trang
-                // finish();
-            }
-        });
+        // 2. [MOCK] Lưu vào file .txt
+        User newUser = new User(email, password, firstName, lastName, dob, phone);
+        MockData.saveUserToTextFile(this, newUser);
 
-        // --- 4. Sự kiện Click nút Google ---
-        btnGoogle.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(SignUpActivity.this, "Đang kết nối với Google...", Toast.LENGTH_SHORT).show();
-                // Logic đăng nhập Google thực tế sẽ viết ở đây (dùng Firebase Auth, v.v.)
-            }
-        });
+        Toast.makeText(this, "Đăng ký thành công! Đã lưu vào máy.", Toast.LENGTH_LONG).show();
 
-        // --- 5. Sự kiện Ẩn/Hiện Mật khẩu (Click icon mắt) ---
-        btnShowPass.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (isPasswordVisible) {
-                    // Đang hiện -> Chuyển sang Ẩn
-                    // Đặt lại kiểu hiển thị là Password (dấu chấm tròn)
-                    etPassword.setTransformationMethod(PasswordTransformationMethod.getInstance());
+        // 3. [FUTURE API] Vị trí gọi API sau này
+        /*
+        ApiService api = ApiClient.getClient().create(ApiService.class);
+        RegisterRequest req = new RegisterRequest(email, password, firstName, lastName...);
+        api.register(req).enqueue(new Callback<User>() { ... });
+        */
 
-                    // Đổi icon mắt (Nếu bạn có icon mắt gạch chéo thì thay vào đây)
-                    // btnShowPass.setImageResource(R.drawable.ic_eye_off);
-                    // btnShowPass.setAlpha(0.5f); // Ví dụ làm mờ icon đi để báo hiệu đang ẩn
-                } else {
-                    // Đang ẩn -> Chuyển sang Hiện
-                    // Đặt lại kiểu hiển thị là Text thường
-                    etPassword.setTransformationMethod(HideReturnsTransformationMethod.getInstance());
-
-                    // Đổi icon mắt mở
-                    // btnShowPass.setImageResource(R.drawable.ic_eye_on);
-                    // btnShowPass.setAlpha(1.0f);
-                }
-
-                // Đảo ngược trạng thái
-                isPasswordVisible = !isPasswordVisible;
-
-                // Quan trọng: Di chuyển con trỏ nháy về cuối dòng chữ sau khi ẩn/hiện
-                // Nếu không có dòng này, con trỏ sẽ nhảy về đầu dòng rất khó chịu
-                etPassword.setSelection(etPassword.getText().length());
-            }
-        });
+        // Chuyển về trang Login và xóa các màn hình trước đó
+        Intent intent = new Intent(SignUpActivity.this, LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+        finish();
     }
 
     private void showDatePicker() {
@@ -148,17 +133,11 @@ public class SignUpActivity extends AppCompatActivity {
         int month = calendar.get(Calendar.MONTH);
         int day = calendar.get(Calendar.DAY_OF_MONTH);
 
-        DatePickerDialog datePickerDialog = new DatePickerDialog(
-                SignUpActivity.this,
-                new DatePickerDialog.OnDateSetListener() {
-                    @Override
-                    public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
-                        String selectedDate = dayOfMonth + "/" + (month + 1) + "/" + year;
-                        etDob.setText(selectedDate);
-                    }
-                },
-                year, month, day
-        );
+        DatePickerDialog datePickerDialog = new DatePickerDialog(this,
+                (view, year1, month1, dayOfMonth) -> {
+                    String selectedDate = dayOfMonth + "/" + (month1 + 1) + "/" + year1;
+                    etDob.setText(selectedDate);
+                }, year, month, day);
         datePickerDialog.show();
     }
 }
