@@ -1,3 +1,14 @@
+-- V1__init_schema.sql (MySQL 8.0 + Flyway + Spring Boot)
+-- UUID stored as BINARY(16) (recommended). Use UUID_TO_BIN(uuid, 1) in application for time-ordered UUIDs.
+
+-- IMPORTANT:
+-- 1) Avoid reserved keyword "GROUPS" in MySQL 8 (GROUPS frame unit). Use table name `class_groups`.
+-- 2) MySQL limitation: columns used in FOREIGN KEY with referential actions cannot be referenced in CHECK constraints
+--    in certain cases (Error 3823). Therefore we avoid such CHECKs and enforce via triggers in V2.
+
+-- ---------------------------------------------------------
+-- USERS
+-- ---------------------------------------------------------
 CREATE TABLE users (
   id                 BINARY(16) NOT NULL,
   platform_role      ENUM('ADMIN','USER') NOT NULL DEFAULT 'USER',
@@ -21,6 +32,9 @@ CREATE TABLE users (
   CONSTRAINT chk_users_full_name_len CHECK (CHAR_LENGTH(full_name) >= 2)
 ) ENGINE=InnoDB;
 
+-- ---------------------------------------------------------
+-- CLASS GROUPS
+-- ---------------------------------------------------------
 CREATE TABLE class_groups (
   id                 BINARY(16) NOT NULL,
   owner_user_id      BINARY(16) NOT NULL,
@@ -48,6 +62,9 @@ CREATE TABLE class_groups (
   CONSTRAINT chk_groups_join_code_len CHECK (CHAR_LENGTH(join_code) BETWEEN 6 AND 16)
 ) ENGINE=InnoDB;
 
+-- ---------------------------------------------------------
+-- GROUP MEMBERS
+-- ---------------------------------------------------------
 CREATE TABLE group_members (
   group_id           BINARY(16) NOT NULL,
   user_id            BINARY(16) NOT NULL,
@@ -73,6 +90,10 @@ CREATE TABLE group_members (
     ON UPDATE CASCADE ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
+-- ---------------------------------------------------------
+-- ATTENDANCE SESSIONS
+-- 1 group => only 1 OPEN session at a time by unique (group_id, is_open)
+-- ---------------------------------------------------------
 CREATE TABLE attendance_sessions (
   id                 BINARY(16) NOT NULL,
   group_id           BINARY(16) NOT NULL,
@@ -107,6 +128,9 @@ CREATE TABLE attendance_sessions (
   CONSTRAINT chk_as_late_le_window CHECK (late_after_minutes <= time_window_minutes)
 ) ENGINE=InnoDB;
 
+-- ---------------------------------------------------------
+-- SESSION ATTENDANCE (snapshot per session)
+-- ---------------------------------------------------------
 CREATE TABLE session_attendance (
   session_id         BINARY(16) NOT NULL,
   user_id            BINARY(16) NOT NULL,
@@ -140,6 +164,10 @@ CREATE TABLE session_attendance (
   CONSTRAINT chk_sa_distance CHECK (distance_meter IS NULL OR distance_meter >= 0)
 ) ENGINE=InnoDB;
 
+-- ---------------------------------------------------------
+-- ABSENCE REQUESTS
+-- XOR constraint (linked_session_id vs requested_date) enforced by triggers in V2
+-- ---------------------------------------------------------
 CREATE TABLE absence_requests (
   id                 BINARY(16) NOT NULL,
   group_id           BINARY(16) NOT NULL,
@@ -174,11 +202,16 @@ CREATE TABLE absence_requests (
   CONSTRAINT chk_ar_reason_len CHECK (CHAR_LENGTH(reason) BETWEEN 3 AND 500)
 ) ENGINE=InnoDB;
 
+-- Now we can add FK from session_attendance to absence_requests
 ALTER TABLE session_attendance
   ADD CONSTRAINT fk_sa_excused_request
   FOREIGN KEY (excused_by_request_id) REFERENCES absence_requests(id)
   ON UPDATE CASCADE ON DELETE SET NULL;
 
+-- ---------------------------------------------------------
+-- ATTENDANCE EVENTS (audit log)
+-- Any complex rule is enforced by triggers in V2 (avoid Error 3823 with CHECK + FK).
+-- ---------------------------------------------------------
 CREATE TABLE attendance_events (
   id                 BINARY(16) NOT NULL,
   session_id         BINARY(16) NOT NULL,
