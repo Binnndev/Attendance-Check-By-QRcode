@@ -212,14 +212,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 
 import com.androidapp.attendencecheckqrcode.R;
-import com.androidapp.attendencecheckqrcode.models.User; // Import Model User
+import com.androidapp.attendencecheckqrcode.models.User;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 // Import các màn hình con
-//import com.androidapp.attendencecheckqrcode.ui.attendance.AttendanceActivity;
 import com.androidapp.attendencecheckqrcode.ui.clazz.CreateClassActivity;
-import com.androidapp.attendencecheckqrcode.ui.clazz.ClassListActivity; // Sửa lại import cho đúng
+import com.androidapp.attendencecheckqrcode.ui.clazz.ClassListActivity;
 import com.androidapp.attendencecheckqrcode.ui.settings.SettingsActivity;
 import com.androidapp.attendencecheckqrcode.ui.stats.StatsActivity;
 import com.androidapp.attendencecheckqrcode.ui.qr.QRScanActivity;
@@ -284,7 +283,6 @@ public class HomeActivity extends AppCompatActivity {
         tvDate = findViewById(R.id.tvDate);
         tvGreeting = findViewById(R.id.tvGreeting);
 
-        // Ánh xạ TextView tên user (Đảm bảo trong XML có ID là tvName)
         tvName = findViewById(R.id.tvName);
     }
 
@@ -348,7 +346,7 @@ public class HomeActivity extends AppCompatActivity {
             public void run() {
                 updateCurrentDate();
                 setupGreeting();
-                handler.postDelayed(this, 60000); // Cập nhật mỗi 1 phút (60s) là đủ, 1s hơi tốn pin
+                handler.postDelayed(this, 60000); // Cập nhật mỗi 1 phút
             }
         };
         handler.post(timeUpdater);

@@ -125,13 +125,11 @@ public class CreateClassActivity extends AppCompatActivity {
             tvMaxAbsence.setText(String.valueOf(maxAbsence));
         });
 
-        // --- LOGIC CHỌN THỨ CŨ GIỮ NGUYÊN ---
         // --- LOGIC CHỌN THỨ ---
         for (TextView dayView : dayViews) {
             dayView.setOnClickListener(v -> {
                 v.setSelected(!v.isSelected());
 
-                // --- SỬA LỖI TẠI ĐÂY ---
                 // Ép kiểu v thành TextView
                 TextView tv = (TextView) v;
 
