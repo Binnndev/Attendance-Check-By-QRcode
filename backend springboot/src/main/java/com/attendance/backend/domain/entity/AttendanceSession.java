@@ -3,9 +3,12 @@ package com.attendance.backend.domain.entity;
 import com.attendance.backend.domain.enums.SessionStatus;
 import com.attendance.backend.common.persistence.UuidBinary16SwapConverter;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
+
 
 @Entity
 @Table(name="attendance_sessions",
@@ -17,6 +20,9 @@ import java.util.UUID;
                 @UniqueConstraint(name="uk_as_group_single_open", columnNames={"group_id","is_open"})
         }
 )
+
+@Getter
+@Setter
 public class AttendanceSession {
     @Id
     @Column(name="id", columnDefinition="BINARY(16)", nullable=false)

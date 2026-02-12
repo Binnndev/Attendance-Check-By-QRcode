@@ -2,6 +2,9 @@ package com.attendance.backend.domain.entity;
 
 import com.attendance.backend.common.persistence.UuidBinary16SwapConverter;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.Instant;
 import java.util.UUID;
 
@@ -17,23 +20,32 @@ import java.util.UUID;
         }
 )
 public class QrToken {
+    @Setter
+    @Getter
     @Id
     @Column(name="token_id", length=64, nullable=false)
     private String tokenId;
 
+    @Setter
+    @Getter
     @Column(name="session_id", columnDefinition="BINARY(16)", nullable=false)
     @Convert(converter = UuidBinary16SwapConverter.class)
     private UUID sessionId;
 
+    @Getter
     @Column(name="token_hash", columnDefinition="VARBINARY(32)", nullable=false)
     private byte[] tokenHash;
 
     @Column(name="issued_at", nullable=false)
     private Instant issuedAt;
 
+    @Setter
+    @Getter
     @Column(name="expires_at", nullable=false)
     private Instant expiresAt;
 
+    @Getter
+    @Setter
     @Column(name="revoked_at")
     private Instant revokedAt;
 
