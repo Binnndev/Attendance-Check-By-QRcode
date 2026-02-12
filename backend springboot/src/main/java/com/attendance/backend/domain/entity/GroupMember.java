@@ -3,8 +3,9 @@ package com.attendance.backend.domain.entity;
 import com.attendance.backend.common.persistence.UuidBinary16SwapConverter;
 import com.attendance.backend.domain.enums.MemberRole;
 import com.attendance.backend.domain.enums.MemberStatus;
+import com.attendance.backend.domain.id.GroupMemberId;
 import jakarta.persistence.*;
-import java.io.Serializable;
+
 import java.time.Instant;
 import java.util.UUID;
 

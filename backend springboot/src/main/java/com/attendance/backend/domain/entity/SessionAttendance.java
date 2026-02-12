@@ -1,11 +1,11 @@
 package com.attendance.backend.domain.entity;
 
 import com.attendance.backend.common.persistence.UuidBinary16SwapConverter;
-import com.attendance.backend.domain.entity.SessionAttendanceId;
+import com.attendance.backend.domain.id.SessionAttendanceId;
 import com.attendance.backend.domain.enums.AttendanceStatus;
 import com.attendance.backend.domain.enums.CheckInMethod;
 import jakarta.persistence.*;
-import java.io.Serializable;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
