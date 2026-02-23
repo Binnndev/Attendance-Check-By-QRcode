@@ -2,6 +2,10 @@ server:
   port: 8080
 
 spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
+
   datasource:
     url: jdbc:mysql://localhost:3306/qr_attendance?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=utf8
     username: root
@@ -11,11 +15,11 @@ spring:
   jpa:
     hibernate:
       ddl-auto: none
-    open-in-view: false
     properties:
-      hibernate:
-        format_sql: true
-    show-sql: true
+      hibernate.type.preferred_boolean_jdbc_type: TINYINT
+      hibernate.jdbc.time_zone: UTC
+      hibernate.format_sql: true
+
 
   flyway:
     enabled: true
@@ -26,3 +30,11 @@ spring:
 logging:
   level:
     org.flywaydb: INFO
+
+app:
+  security:
+    jwt:
+      issuer: "attendance-api-dev"
+      secret: "CHANGE_ME_DEV_32_CHARS_MINIMUM_SECRET"
+      accessTokenMinutes: 60
+      refreshTokenDays: 30

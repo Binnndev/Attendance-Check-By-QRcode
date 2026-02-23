@@ -2,8 +2,12 @@ server:
   port: 8081
 
 spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
+
   datasource:
-    url: jdbc:mysql://localhost:3306/qr_attendance_dev?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=utf8
+    url: jdbc:mysql://localhost:3306/qr_attendance_dev?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&useUnicode=true&characterEncoding=UTF-8&connectionCollation=utf8mb4_unicode_ci
     username: root
     password: 123456
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -11,7 +15,7 @@ spring:
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none
     properties:
       hibernate.jdbc.time_zone: UTC
       hibernate.format_sql: true
@@ -19,7 +23,7 @@ spring:
 
   flyway:
     enabled: true
-    locations: classpath:db/migration,classpath:seed
+    locations: classpath:db/migration,classpath:db/seed
     baseline-on-migrate: false
     validate-on-migrate: true
 
@@ -37,9 +41,7 @@ springdoc:
     enabled: true
 
 app:
-  security:
-    jwt:
-      issuer: "attendance-api-dev"
-      secret: "CHANGE_ME_DEV_32_CHARS_MINIMUM_SECRET"
-      accessTokenMinutes: 60
-      refreshTokenDays: 30
+  jwt:
+    issuer: "attendance-dev"
+    secret: "dev-secret-please-change-32bytes-minimum-123456"
+    access-token-minutes: 60

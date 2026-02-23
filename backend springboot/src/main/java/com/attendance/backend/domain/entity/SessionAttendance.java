@@ -5,70 +5,75 @@ import com.attendance.backend.domain.id.SessionAttendanceId;
 import com.attendance.backend.domain.enums.AttendanceStatus;
 import com.attendance.backend.domain.enums.CheckInMethod;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name="session_attendance",
+@Table(
+        name = "session_attendance",
         indexes = {
-                @Index(name="idx_sa_user_created", columnList="user_id,created_at"),
-                @Index(name="idx_sa_session_status", columnList="session_id,attendance_status"),
-                @Index(name="idx_sa_checkin", columnList="session_id,check_in_at"),
-                @Index(name="idx_sa_session_qr_token", columnList="session_id,qr_token_id")
+                @Index(name = "idx_sa_user_created", columnList = "user_id, created_at"),
+                @Index(name = "idx_sa_session_status", columnList = "session_id, attendance_status"),
+                @Index(name = "idx_sa_checkin", columnList = "session_id, check_in_at"),
+                @Index(name = "idx_sa_session_qr_token", columnList = "session_id, qr_token_id")
         }
 )
 public class SessionAttendance {
+
     @EmbeddedId
     public SessionAttendanceId id;
 
     @Enumerated(EnumType.STRING)
-    @Column(name="attendance_status", nullable=false)
+    @Column(name = "attendance_status", nullable = false, length = 20)
     public AttendanceStatus attendanceStatus = AttendanceStatus.ABSENT;
 
-    @Column(name="check_in_at")
+    @Column(name = "check_in_at", columnDefinition = "DATETIME(3)")
     public Instant checkInAt;
 
     @Enumerated(EnumType.STRING)
-    @Column(name="check_in_method", nullable=false)
+    @Column(name = "check_in_method", nullable = false, length = 20)
     public CheckInMethod checkInMethod = CheckInMethod.QR;
 
-    @Column(name="qr_token_id", length=64)
+    @Column(name = "qr_token_id", length = 64)
     public String qrTokenId;
 
-    @Column(name="device_id", length=120)
+    @Column(name = "device_id", length = 120)
     public String deviceId;
 
-    @Column(name="ip_address", length=45)
+    @Column(name = "ip_address", length = 45)
     public String ipAddress;
 
-    @Column(name="user_agent", length=255)
+    @Column(name = "user_agent", length = 255)
     public String userAgent;
 
-    @Column(name="geo_lat", precision=10, scale=7)
+    @Column(name = "geo_lat", precision = 10, scale = 7)
     public BigDecimal geoLat;
 
-    @Column(name="geo_lng", precision=10, scale=7)
+    @Column(name = "geo_lng", precision = 10, scale = 7)
     public BigDecimal geoLng;
 
-    @Column(name="distance_meter")
+    @Column(name = "distance_meter")
     public Integer distanceMeter;
 
-    @Column(name="suspicious_flag", nullable=false)
+    @JdbcTypeCode(SqlTypes.TINYINT)
+    @Column(name = "suspicious_flag", nullable = false)
     public boolean suspiciousFlag;
 
-    @Column(name="suspicious_reason", length=500)
+    @Column(name = "suspicious_reason", length = 500)
     public String suspiciousReason;
 
-    @Column(name="excused_by_request_id", columnDefinition="BINARY(16)")
+    @Column(name = "excused_by_request_id", columnDefinition = "BINARY(16)")
     @Convert(converter = UuidBinary16SwapConverter.class)
     public UUID excusedByRequestId;
 
-    @Column(name="created_at", nullable=false)
+    @Column(name = "created_at", nullable = false, columnDefinition = "DATETIME(3)")
     public Instant createdAt;
 
-    @Column(name="updated_at", nullable=false)
+    @Column(name = "updated_at", nullable = false, columnDefinition = "DATETIME(3)")
     public Instant updatedAt;
 
     public static SessionAttendance createNew(UUID sessionId, UUID userId) {
@@ -79,4 +84,11 @@ public class SessionAttendance {
         sa.suspiciousFlag = false;
         return sa;
     }
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumns({
+            @JoinColumn(name = "session_id", referencedColumnName = "session_id", insertable = false, updatable = false),
+            @JoinColumn(name = "qr_token_id", referencedColumnName = "token_id", insertable = false, updatable = false)
+    })
+    private QrToken qrToken;
 }

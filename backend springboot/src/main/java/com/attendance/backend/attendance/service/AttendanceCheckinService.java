@@ -1,11 +1,12 @@
 package com.attendance.backend.attendance.service;
 
+import com.attendance.backend.attendance.repository.QrTokenRepository;
+import com.attendance.backend.common.db.DbErrorTranslator;
 import com.attendance.backend.attendance.repository.AttendanceSessionRepository;
 import com.attendance.backend.attendance.repository.SessionAttendanceRepository;
 import com.attendance.backend.common.exception.ApiException;
 import com.attendance.backend.domain.entity.AttendanceEvent;
 import com.attendance.backend.domain.entity.AttendanceSession;
-import com.attendance.backend.domain.entity.GroupMember;
 import com.attendance.backend.domain.entity.QrToken;
 import com.attendance.backend.domain.entity.SessionAttendance;
 import com.attendance.backend.domain.enums.AttendanceStatus;
@@ -34,22 +35,25 @@ import java.util.UUID;
 @Service
 public class AttendanceCheckinService {
 
-    private static final String FK_SA_SESSION_QR_TOKEN = "fk_sa_session_qr_token"; // V6 exact
-
     private final AttendanceSessionRepository attendanceSessionRepository;
     private final SessionAttendanceRepository sessionAttendanceRepository;
     private final EntityManager entityManager;
     private final ObjectMapper objectMapper;
     private final Clock clock = Clock.systemUTC();
+    private final DbErrorTranslator dbErrorTranslator;
 
-    public AttendanceCheckinService(AttendanceSessionRepository attendanceSessionRepository,
-                                    SessionAttendanceRepository sessionAttendanceRepository,
-                                    EntityManager entityManager,
-                                    ObjectMapper objectMapper) {
+    public AttendanceCheckinService(
+            AttendanceSessionRepository attendanceSessionRepository,
+            SessionAttendanceRepository sessionAttendanceRepository,
+            EntityManager entityManager,
+            ObjectMapper objectMapper,
+            DbErrorTranslator dbErrorTranslator
+    ) {
         this.attendanceSessionRepository = attendanceSessionRepository;
         this.sessionAttendanceRepository = sessionAttendanceRepository;
         this.entityManager = entityManager;
         this.objectMapper = objectMapper;
+        this.dbErrorTranslator = dbErrorTranslator;
     }
 
     /**
@@ -65,7 +69,6 @@ public class AttendanceCheckinService {
         final Instant now = Instant.now(clock);
 
         try {
-            // 1) Lock session bằng READ (scale tốt hơn WRITE)
             AttendanceSession session = attendanceSessionRepository.findByIdForShare(cmd.sessionId())
                     .orElseThrow(() -> ApiException.notFound("SESSION_NOT_FOUND", "Session not found"));
 
@@ -73,19 +76,16 @@ public class AttendanceCheckinService {
                 throw ApiException.conflict("SESSION_NOT_OPEN", "Session is not OPEN");
             }
 
-            // 2) Verify user là member APPROVED
             ensureApprovedMember(session.getGroupId(), cmd.userId());
 
-            // 3) Verify QR token (id + hash + expiry + revoke + belongs to session)
             QrToken token = verifyQrToken(cmd.token(), cmd.sessionId(), now);
-
-            // 4) Apply check-in window rule
+// fallback: window tính từ open
             Instant openAt = session.getCheckinOpenAt() != null ? session.getCheckinOpenAt() : session.getStartAt();
+
             Instant closeAt = session.getCheckinCloseAt() != null
                     ? session.getCheckinCloseAt()
-                    : session.getStartAt().plus(Duration.ofMinutes(session.getTimeWindowMinutes()));
+                    : openAt.plus(Duration.ofMinutes(session.getTimeWindowMinutes()));
 
-            // DB có chk_as_checkin_window, giữ check này như guard
             if (closeAt.isBefore(openAt)) {
                 throw ApiException.unprocessable("SESSION_TIME_INVALID", "checkin_close_at is before checkin_open_at");
             }
@@ -100,22 +100,18 @@ public class AttendanceCheckinService {
             Instant lateThreshold = openAt.plus(Duration.ofMinutes(session.getLateAfterMinutes()));
             AttendanceStatus computed = now.isAfter(lateThreshold) ? AttendanceStatus.LATE : AttendanceStatus.PRESENT;
 
-            // 5) Upsert attendance “xịn” (race-safe)
             SessionAttendance attendance = getOrCreateAttendanceLocked(cmd.sessionId(), cmd.userId(), now);
 
-            // Nếu đã checkin rồi thì reject
             if (attendance.checkInAt != null) {
                 throw ApiException.conflict("ALREADY_CHECKED_IN", "User already checked in");
             }
 
-            // Bonus: nếu EXCUSED thì không cho check-in (nếu bạn muốn logic này)
             if (attendance.attendanceStatus == AttendanceStatus.EXCUSED) {
                 throw ApiException.conflict("EXCUSED_CANNOT_CHECKIN", "Excused user cannot check in");
             }
 
             AttendanceStatus oldStatus = attendance.attendanceStatus;
 
-            // 6) Update attendance
             attendance.attendanceStatus = computed;
             attendance.checkInAt = now;
             attendance.checkInMethod = CheckInMethod.QR;
@@ -136,7 +132,6 @@ public class AttendanceCheckinService {
 
             sessionAttendanceRepository.saveAndFlush(attendance);
 
-            // 7) Ghi event audit
             AttendanceEvent event = new AttendanceEvent();
             event.id = UUID.randomUUID();
             event.sessionId = cmd.sessionId();
@@ -162,8 +157,6 @@ public class AttendanceCheckinService {
 
             event.createdAt = now;
             entityManager.persist(event);
-
-            // flush để bắt trigger/constraint sớm (optional nhưng “xịn”)
             entityManager.flush();
 
             return new QrCheckinResult(
@@ -175,44 +168,37 @@ public class AttendanceCheckinService {
             );
 
         } catch (DataIntegrityViolationException ex) {
-            String root = rootMessage(ex);
-
-            // Fix #4: phân loại FK v6
-            if (root.contains(FK_SA_SESSION_QR_TOKEN)) {
-                throw ApiException.conflict("QR_TOKEN_NOT_FOR_SESSION", "QR token does not belong to this session");
-            }
-
-            // Duplicate PK/unique thường là do concurrency
-            if (root.contains("Duplicate entry") && (root.contains("PRIMARY") || root.contains("session_attendance"))) {
-                throw ApiException.conflict("ALREADY_CHECKED_IN", "User already checked in");
-            }
-
-            throw ex;
+            throw dbErrorTranslator.translate(ex);
         }
     }
 
-    /**
-     * Fix #3: Upsert attendance theo hướng:
-     * - select FOR UPDATE
-     * - nếu chưa có: thử insert
-     * - nếu insert fail do race: select FOR UPDATE lại và dùng row đã tồn tại
-     */
     private SessionAttendance getOrCreateAttendanceLocked(UUID sessionId, UUID userId, Instant now) {
-        var locked = sessionAttendanceRepository.findBySessionAndUserForUpdate(sessionId, userId);
-        if (locked.isPresent()) return locked.get();
+        SessionAttendance existing = sessionAttendanceRepository
+                .findBySessionAndUserForUpdate(sessionId, userId)
+                .orElse(null);
+
+        if (existing != null) return existing;
+
+        SessionAttendance created = SessionAttendance.createNew(sessionId, userId);
+        created.createdAt = now;
+        created.updatedAt = now;
 
         try {
-            SessionAttendance sa = SessionAttendance.createNew(sessionId, userId);
-            sa.id = new SessionAttendanceId(sessionId, userId);
-            sa.createdAt = now;
-            sa.updatedAt = now;
-            sessionAttendanceRepository.saveAndFlush(sa);
-        } catch (DataIntegrityViolationException ignore) {
-            // someone else inserted concurrently
-        }
+            return sessionAttendanceRepository.saveAndFlush(created);
+        } catch (DataIntegrityViolationException ex) {
+            String root = rootMessage(ex);
+            boolean duplicatePk = root.contains("Duplicate entry") && root.contains("PRIMARY");
+            if (!duplicatePk) {
+                throw dbErrorTranslator.translate(ex);
+            }
 
-        return sessionAttendanceRepository.findBySessionAndUserForUpdate(sessionId, userId)
-                .orElseThrow(() -> ApiException.conflict("ATTENDANCE_ROW_MISSING", "Cannot load attendance row"));
+            return sessionAttendanceRepository
+                    .findBySessionAndUserForUpdate(sessionId, userId)
+                    .orElseThrow(() -> ApiException.conflict(
+                            "ATTENDANCE_UPSERT_FAILED",
+                            "Cannot create attendance record"
+                    ));
+        }
     }
 
     private void ensureApprovedMember(UUID groupId, UUID userId) {
@@ -236,7 +222,6 @@ public class AttendanceCheckinService {
     private QrToken verifyQrToken(String plainToken, UUID expectedSessionId, Instant now) {
         ParsedToken parsed = parseToken(plainToken);
 
-        // token_id là PK của qr_tokens
         QrToken token = entityManager.find(QrToken.class, parsed.tokenId(), LockModeType.PESSIMISTIC_READ);
         if (token == null) {
             throw ApiException.badRequest("QR_TOKEN_INVALID", "QR token is invalid");
@@ -254,11 +239,9 @@ public class AttendanceCheckinService {
             throw ApiException.conflict("QR_TOKEN_EXPIRED", "QR token expired");
         }
 
-        // Fix #2: canonical scheme -> hash(secret)
         byte[] stored = token.getTokenHash();
         byte[] hashSecret = sha256(parsed.secret());
 
-        // (compat) nếu trước đây bạn đã lưu hash(full token) thì giữ thêm 1 nhánh để không gãy
         byte[] hashFull = sha256(plainToken);
 
         boolean ok = MessageDigest.isEqual(stored, hashSecret) || MessageDigest.isEqual(stored, hashFull);
