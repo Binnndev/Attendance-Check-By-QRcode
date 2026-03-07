@@ -2,6 +2,7 @@ package com.attendance.backend.attendance.api;
 
 import com.attendance.backend.attendance.service.AttendanceCheckinService;
 import com.attendance.backend.domain.enums.AttendanceStatus;
+import com.attendance.backend.common.exception.ApiException;
 import com.attendance.backend.security.UserPrincipal;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -29,6 +30,15 @@ public class AttendanceQrController {
             @AuthenticationPrincipal UserPrincipal me,
             @RequestBody QrCheckinRequest body
     ) {
+        if (me == null) {
+            throw com.attendance.backend.common.exception.ApiException
+                    .forbidden("UNAUTHORIZED", "Missing JWT principal");
+        }
+        if (body == null || body.token() == null || body.token().isBlank()) {
+            throw com.attendance.backend.common.exception.ApiException
+                    .badRequest("QR_TOKEN_REQUIRED", "token is required");
+        }
+
         UUID userId = me.getUserId();
 
         var cmd = new AttendanceCheckinService.QrCheckinCommand(

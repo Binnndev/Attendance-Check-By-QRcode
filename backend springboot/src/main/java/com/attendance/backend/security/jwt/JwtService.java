@@ -81,7 +81,7 @@ public class JwtService {
     public JwtUserPrincipal parseAccessToken(String token) {
         ParsedJwt parsed = parseAndValidate(token);
         String role = parsed.roles().isEmpty() ? null : parsed.roles().get(0);
-        return new JwtUserPrincipal(parsed.userId(), role);
+        return new JwtUserPrincipal(parsed.userId(), role, parsed.roles());
     }
 
     private SecretKey signingKey() {

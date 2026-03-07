@@ -1,6 +1,8 @@
 package com.attendance.backend.domain.entity;
 
-import com.attendance.backend.common.persistence.UuidBinary16SwapConverter;
+import  com.attendance.backend.common.persistence.UuidBinary16SwapConverter;
+import com.attendance.backend.common.persistence.MysqlUuidBinary16SwapType;
+import org.hibernate.annotations.Type;
 import com.attendance.backend.domain.enums.AttendanceStatus;
 import com.attendance.backend.domain.enums.EventType;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -26,8 +28,8 @@ import java.util.UUID;
 public class AttendanceEvent {
 
     @Id
-    @Column(name = "id", columnDefinition = "BINARY(16)", nullable = false)
-    @Convert(converter = UuidBinary16SwapConverter.class)
+    @Type(value = MysqlUuidBinary16SwapType.class)
+    @Column(name = "id", columnDefinition = "BINARY(16)")
     public UUID id;
 
     @Column(name = "session_id", columnDefinition = "BINARY(16)", nullable = false)
@@ -43,8 +45,18 @@ public class AttendanceEvent {
     public UUID actorUserId;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "event_type", nullable = false, length = 40)
+    @Column(name = "event_type", length = 30, nullable = false)
     public EventType eventType;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "event_payload", columnDefinition = "json", nullable = false)
+    public JsonNode eventPayload;
+
+    @Column(name = "qr_token_id", length = 64)
+    public String qrTokenId;
+
+    @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
+    public Instant createdAt;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "old_status", length = 20)
@@ -54,13 +66,5 @@ public class AttendanceEvent {
     @Column(name = "new_status", length = 20)
     public AttendanceStatus newStatus;
 
-    @Column(name = "qr_token_id", length = 64)
-    public String qrTokenId;
-
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "event_payload", columnDefinition = "JSON")
-    public JsonNode eventPayload;
-
-    @Column(name = "created_at", nullable = false, columnDefinition = "DATETIME(3)")
-    public Instant createdAt;
+    public AttendanceEvent() {}
 }

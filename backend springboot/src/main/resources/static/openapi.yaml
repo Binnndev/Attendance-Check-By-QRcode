@@ -1,11 +1,14 @@
 openapi: 3.0.3
 info:
-  title: Attendance QR API (DB v1.0 exact)
+  title: Attendance QR API
   version: 1.0.0
+
 servers:
   - url: /api/v1
+
 security:
   - bearerAuth: []
+
 tags:
   - name: Auth
   - name: Me
@@ -27,14 +30,17 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/LoginRequest" }
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
       responses:
         "200":
           description: OK
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/TokenResponse" }
-        "401": { $ref: "#/components/responses/Err401" }
+              schema:
+                $ref: "#/components/schemas/TokenResponse"
+        "401":
+          $ref: "#/components/responses/Err401"
 
   /me:
     get:
@@ -45,8 +51,10 @@ paths:
           description: OK
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/MeResponse" }
-        "401": { $ref: "#/components/responses/Err401" }
+              schema:
+                $ref: "#/components/schemas/MeResponse"
+        "401":
+          $ref: "#/components/responses/Err401"
 
     patch:
       tags: [Me]
@@ -55,15 +63,19 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/UpdateMeRequest" }
+            schema:
+              $ref: "#/components/schemas/UpdateMeRequest"
       responses:
         "200":
           description: OK
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/MeResponse" }
-        "400": { $ref: "#/components/responses/Err400" }
-        "401": { $ref: "#/components/responses/Err401" }
+              schema:
+                $ref: "#/components/schemas/MeResponse"
+        "400":
+          $ref: "#/components/responses/Err400"
+        "401":
+          $ref: "#/components/responses/Err401"
 
   /groups:
     post:
@@ -73,15 +85,19 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/CreateGroupRequest" }
+            schema:
+              $ref: "#/components/schemas/CreateGroupRequest"
       responses:
         "201":
           description: Created
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/GroupResponse" }
-        "409": { $ref: "#/components/responses/Err409" }
-        "400": { $ref: "#/components/responses/Err400" }
+              schema:
+                $ref: "#/components/schemas/GroupResponse"
+        "409":
+          $ref: "#/components/responses/Err409"
+        "400":
+          $ref: "#/components/responses/Err400"
 
     get:
       tags: [Groups]
@@ -95,7 +111,8 @@ paths:
           description: OK
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/PageGroupResponse" }
+              schema:
+                $ref: "#/components/schemas/PageGroupResponse"
 
   /groups/{groupId}:
     get:
@@ -108,9 +125,12 @@ paths:
           description: OK
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/GroupResponse" }
-        "403": { $ref: "#/components/responses/Err403" }
-        "404": { $ref: "#/components/responses/Err404" }
+              schema:
+                $ref: "#/components/schemas/GroupResponse"
+        "403":
+          $ref: "#/components/responses/Err403"
+        "404":
+          $ref: "#/components/responses/Err404"
 
     patch:
       tags: [Groups]
@@ -121,17 +141,23 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/UpdateGroupRequest" }
+            schema:
+              $ref: "#/components/schemas/UpdateGroupRequest"
       responses:
         "200":
           description: OK
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/GroupResponse" }
-        "400": { $ref: "#/components/responses/Err400" }
-        "403": { $ref: "#/components/responses/Err403" }
-        "404": { $ref: "#/components/responses/Err404" }
-        "409": { $ref: "#/components/responses/Err409" }
+              schema:
+                $ref: "#/components/schemas/GroupResponse"
+        "400":
+          $ref: "#/components/responses/Err400"
+        "403":
+          $ref: "#/components/responses/Err403"
+        "404":
+          $ref: "#/components/responses/Err404"
+        "409":
+          $ref: "#/components/responses/Err409"
 
   /groups/{groupId}/archive:
     post:
@@ -144,9 +170,12 @@ paths:
           description: OK
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/GroupResponse" }
-        "403": { $ref: "#/components/responses/Err403" }
-        "404": { $ref: "#/components/responses/Err404" }
+              schema:
+                $ref: "#/components/schemas/GroupResponse"
+        "403":
+          $ref: "#/components/responses/Err403"
+        "404":
+          $ref: "#/components/responses/Err404"
 
   /groups/join:
     post:
@@ -156,15 +185,19 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/JoinGroupRequest" }
+            schema:
+              $ref: "#/components/schemas/JoinGroupRequest"
       responses:
         "200":
           description: OK
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/MemberResponse" }
-        "404": { $ref: "#/components/responses/Err404" }
-        "400": { $ref: "#/components/responses/Err400" }
+              schema:
+                $ref: "#/components/schemas/MemberResponse"
+        "404":
+          $ref: "#/components/responses/Err404"
+        "400":
+          $ref: "#/components/responses/Err400"
 
   /groups/{groupId}/members:
     get:
@@ -179,8 +212,10 @@ paths:
           description: OK
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/PageMemberResponse" }
-        "403": { $ref: "#/components/responses/Err403" }
+              schema:
+                $ref: "#/components/schemas/PageMemberResponse"
+        "403":
+          $ref: "#/components/responses/Err403"
 
   /groups/{groupId}/members/{userId}:
     patch:
@@ -193,16 +228,21 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/MemberActionRequest" }
+            schema:
+              $ref: "#/components/schemas/MemberActionRequest"
       responses:
         "200":
           description: OK
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/MemberResponse" }
-        "422": { $ref: "#/components/responses/Err422" }
-        "409": { $ref: "#/components/responses/Err409" }
-        "403": { $ref: "#/components/responses/Err403" }
+              schema:
+                $ref: "#/components/schemas/MemberResponse"
+        "422":
+          $ref: "#/components/responses/Err422"
+        "409":
+          $ref: "#/components/responses/Err409"
+        "403":
+          $ref: "#/components/responses/Err403"
 
   /groups/{groupId}/members/me:
     delete:
@@ -211,9 +251,12 @@ paths:
       parameters:
         - $ref: "#/components/parameters/GroupId"
       responses:
-        "204": { description: No Content }
-        "409": { $ref: "#/components/responses/Err409" }
-        "403": { $ref: "#/components/responses/Err403" }
+        "204":
+          description: No Content
+        "409":
+          $ref: "#/components/responses/Err409"
+        "403":
+          $ref: "#/components/responses/Err403"
 
   /groups/{groupId}/sessions:
     post:
@@ -228,15 +271,19 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/CreateSessionRequest" }
+            schema:
+              $ref: "#/components/schemas/CreateSessionRequest"
       responses:
         "201":
           description: Created
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/SessionResponse" }
-        "409": { $ref: "#/components/responses/Err409" }
-        "403": { $ref: "#/components/responses/Err403" }
+              schema:
+                $ref: "#/components/schemas/SessionResponse"
+        "409":
+          $ref: "#/components/responses/Err409"
+        "403":
+          $ref: "#/components/responses/Err403"
 
     get:
       tags: [Sessions]
@@ -245,13 +292,18 @@ paths:
         - $ref: "#/components/parameters/GroupId"
         - name: from
           in: query
-          schema: { type: string, format: date }
+          schema:
+            type: string
+            format: date
         - name: to
           in: query
-          schema: { type: string, format: date }
+          schema:
+            type: string
+            format: date
         - name: status
           in: query
-          schema: { $ref: "#/components/schemas/SessionStatus" }
+          schema:
+            $ref: "#/components/schemas/SessionStatus"
         - $ref: "#/components/parameters/Page"
         - $ref: "#/components/parameters/Size"
       responses:
@@ -259,8 +311,10 @@ paths:
           description: OK
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/PageSessionResponse" }
-        "403": { $ref: "#/components/responses/Err403" }
+              schema:
+                $ref: "#/components/schemas/PageSessionResponse"
+        "403":
+          $ref: "#/components/responses/Err403"
 
   /groups/{groupId}/sessions/open:
     get:
@@ -273,8 +327,10 @@ paths:
           description: OK
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/SessionResponse" }
-        "404": { $ref: "#/components/responses/Err404" }
+              schema:
+                $ref: "#/components/schemas/SessionResponse"
+        "404":
+          $ref: "#/components/responses/Err404"
 
   /sessions/{sessionId}:
     get:
@@ -287,9 +343,12 @@ paths:
           description: OK
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/SessionResponse" }
-        "403": { $ref: "#/components/responses/Err403" }
-        "404": { $ref: "#/components/responses/Err404" }
+              schema:
+                $ref: "#/components/schemas/SessionResponse"
+        "403":
+          $ref: "#/components/responses/Err403"
+        "404":
+          $ref: "#/components/responses/Err404"
 
   /sessions/{sessionId}/close:
     post:
@@ -301,15 +360,19 @@ paths:
         required: false
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/CloseSessionRequest" }
+            schema:
+              $ref: "#/components/schemas/CloseSessionRequest"
       responses:
         "200":
           description: OK
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/SessionResponse" }
-        "409": { $ref: "#/components/responses/Err409" }
-        "403": { $ref: "#/components/responses/Err403" }
+              schema:
+                $ref: "#/components/schemas/SessionResponse"
+        "409":
+          $ref: "#/components/responses/Err409"
+        "403":
+          $ref: "#/components/responses/Err403"
 
   /sessions/{sessionId}/cancel:
     post:
@@ -322,8 +385,10 @@ paths:
           description: OK
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/SessionResponse" }
-        "403": { $ref: "#/components/responses/Err403" }
+              schema:
+                $ref: "#/components/schemas/SessionResponse"
+        "403":
+          $ref: "#/components/responses/Err403"
 
   /sessions/{sessionId}/qr/rotate:
     post:
@@ -335,14 +400,23 @@ paths:
         chk_qt_exp_after_issued: expires_at > issued_at.
       parameters:
         - $ref: "#/components/parameters/SessionId"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RotateQrRequest"
       responses:
         "200":
           description: OK (plaintext token returned once)
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/RotateQrResponse" }
-        "409": { $ref: "#/components/responses/Err409" }
-        "403": { $ref: "#/components/responses/Err403" }
+              schema:
+                $ref: "#/components/schemas/RotateQrResponse"
+        "409":
+          $ref: "#/components/responses/Err409"
+        "403":
+          $ref: "#/components/responses/Err403"
 
   /sessions/{sessionId}/checkin/qr:
     post:
@@ -363,16 +437,53 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/QrCheckinRequest" }
+            schema:
+              $ref: "#/components/schemas/QrCheckinRequest"
       responses:
         "200":
           description: OK
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/AttendanceRecordResponse" }
-        "400": { $ref: "#/components/responses/Err400" }
-        "403": { $ref: "#/components/responses/Err403" }
-        "409": { $ref: "#/components/responses/Err409" }
+              schema:
+                $ref: "#/components/schemas/QrCheckinResponse"
+        "400":
+          $ref: "#/components/responses/Err400"
+        "403":
+          $ref: "#/components/responses/Err403"
+        "409":
+          $ref: "#/components/responses/Err409"
+
+  /sessions/{sessionId}/checkin/reopen:
+    post:
+      tags: [Attendance]
+      summary: Reopen check-in window (OWNER/CO_HOST)
+      description: >
+        Reopen check-in window for a session.
+        Only OWNER/CO_HOST can perform this action.
+        Will reject if another OPEN session already exists in the same group.
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReopenCheckinRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReopenCheckinResponse"
+        "400":
+          $ref: "#/components/responses/Err400"
+        "403":
+          $ref: "#/components/responses/Err403"
+        "404":
+          $ref: "#/components/responses/Err404"
+        "409":
+          $ref: "#/components/responses/Err409"
 
   /sessions/{sessionId}/attendance:
     get:
@@ -387,8 +498,10 @@ paths:
           description: OK
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/PageAttendanceResponse" }
-        "403": { $ref: "#/components/responses/Err403" }
+              schema:
+                $ref: "#/components/schemas/PageAttendanceResponse"
+        "403":
+          $ref: "#/components/responses/Err403"
 
   /sessions/{sessionId}/attendance/{userId}:
     post:
@@ -401,15 +514,80 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/ManualMarkAttendanceRequest" }
+            schema:
+              $ref: "#/components/schemas/ManualMarkAttendanceRequest"
       responses:
         "200":
           description: OK
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/AttendanceRecordResponse" }
-        "409": { $ref: "#/components/responses/Err409" }
-        "403": { $ref: "#/components/responses/Err403" }
+              schema:
+                $ref: "#/components/schemas/AttendanceRecordResponse"
+        "409":
+          $ref: "#/components/responses/Err409"
+        "403":
+          $ref: "#/components/responses/Err403"
+
+  /sessions/{sessionId}/attendance/{userId}/reset:
+    post:
+      tags: [Attendance]
+      summary: Reset attendance to ABSENT (OWNER/CO_HOST)
+      description: >
+        Reset one user's attendance row in a session back to ABSENT.
+        Clears check_in_at, qr_token_id, device/ip/userAgent and suspicious flags.
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+        - $ref: "#/components/parameters/UserId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResetAttendanceResponse"
+        "403":
+          $ref: "#/components/responses/Err403"
+        "404":
+          $ref: "#/components/responses/Err404"
+        "409":
+          $ref: "#/components/responses/Err409"
+
+  /sessions/{sessionId}/attendance-events:
+    get:
+      tags: [Events]
+      summary: List attendance events of session (OWNER/CO_HOST)
+      description: >
+        Return immutable attendance_events rows of a session.
+        Can filter by userId and limit.
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+        - name: userId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AttendanceEventsResponse"
+        "400":
+          $ref: "#/components/responses/Err400"
+        "403":
+          $ref: "#/components/responses/Err403"
+        "404":
+          $ref: "#/components/responses/Err404"
 
   /groups/{groupId}/absence-requests:
     post:
@@ -421,15 +599,19 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/CreateAbsenceRequest" }
+            schema:
+              $ref: "#/components/schemas/CreateAbsenceRequest"
       responses:
         "201":
           description: Created
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/AbsenceResponse" }
-        "422": { $ref: "#/components/responses/Err422" }
-        "403": { $ref: "#/components/responses/Err403" }
+              schema:
+                $ref: "#/components/schemas/AbsenceResponse"
+        "422":
+          $ref: "#/components/responses/Err422"
+        "403":
+          $ref: "#/components/responses/Err403"
 
     get:
       tags: [Absence]
@@ -438,7 +620,8 @@ paths:
         - $ref: "#/components/parameters/GroupId"
         - name: status
           in: query
-          schema: { $ref: "#/components/schemas/AbsenceRequestStatus" }
+          schema:
+            $ref: "#/components/schemas/AbsenceRequestStatus"
         - $ref: "#/components/parameters/Page"
         - $ref: "#/components/parameters/Size"
       responses:
@@ -446,8 +629,10 @@ paths:
           description: OK
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/PageAbsenceResponse" }
-        "403": { $ref: "#/components/responses/Err403" }
+              schema:
+                $ref: "#/components/schemas/PageAbsenceResponse"
+        "403":
+          $ref: "#/components/responses/Err403"
 
   /absence-requests/{requestId}:
     get:
@@ -457,15 +642,20 @@ paths:
         - name: requestId
           in: path
           required: true
-          schema: { type: string, format: uuid }
+          schema:
+            type: string
+            format: uuid
       responses:
         "200":
           description: OK
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/AbsenceResponse" }
-        "403": { $ref: "#/components/responses/Err403" }
-        "404": { $ref: "#/components/responses/Err404" }
+              schema:
+                $ref: "#/components/schemas/AbsenceResponse"
+        "403":
+          $ref: "#/components/responses/Err403"
+        "404":
+          $ref: "#/components/responses/Err404"
 
   /absence-requests/{requestId}/review:
     patch:
@@ -475,20 +665,26 @@ paths:
         - name: requestId
           in: path
           required: true
-          schema: { type: string, format: uuid }
+          schema:
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/ReviewAbsenceRequest" }
+            schema:
+              $ref: "#/components/schemas/ReviewAbsenceRequest"
       responses:
         "200":
           description: OK
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/AbsenceResponse" }
-        "422": { $ref: "#/components/responses/Err422" }
-        "403": { $ref: "#/components/responses/Err403" }
+              schema:
+                $ref: "#/components/schemas/AbsenceResponse"
+        "422":
+          $ref: "#/components/responses/Err422"
+        "403":
+          $ref: "#/components/responses/Err403"
 
   /absence-requests/{requestId}/cancel:
     post:
@@ -498,15 +694,20 @@ paths:
         - name: requestId
           in: path
           required: true
-          schema: { type: string, format: uuid }
+          schema:
+            type: string
+            format: uuid
       responses:
         "200":
           description: OK
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/AbsenceResponse" }
-        "403": { $ref: "#/components/responses/Err403" }
-        "404": { $ref: "#/components/responses/Err404" }
+              schema:
+                $ref: "#/components/schemas/AbsenceResponse"
+        "403":
+          $ref: "#/components/responses/Err403"
+        "404":
+          $ref: "#/components/responses/Err404"
 
   /sessions/{sessionId}/events:
     get:
@@ -518,20 +719,27 @@ paths:
         - $ref: "#/components/parameters/Size"
         - name: type
           in: query
-          schema: { $ref: "#/components/schemas/EventType" }
+          schema:
+            $ref: "#/components/schemas/EventType"
         - name: from
           in: query
-          schema: { type: string, format: date-time }
+          schema:
+            type: string
+            format: date-time
         - name: to
           in: query
-          schema: { type: string, format: date-time }
+          schema:
+            type: string
+            format: date-time
       responses:
         "200":
           description: OK
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/PageEventResponse" }
-        "403": { $ref: "#/components/responses/Err403" }
+              schema:
+                $ref: "#/components/schemas/PageEventResponse"
+        "403":
+          $ref: "#/components/responses/Err403"
 
   /groups/{groupId}/events:
     get:
@@ -543,20 +751,27 @@ paths:
         - $ref: "#/components/parameters/Size"
         - name: type
           in: query
-          schema: { $ref: "#/components/schemas/EventType" }
+          schema:
+            $ref: "#/components/schemas/EventType"
         - name: from
           in: query
-          schema: { type: string, format: date-time }
+          schema:
+            type: string
+            format: date-time
         - name: to
           in: query
-          schema: { type: string, format: date-time }
+          schema:
+            type: string
+            format: date-time
       responses:
         "200":
           description: OK
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/PageEventResponse" }
-        "403": { $ref: "#/components/responses/Err403" }
+              schema:
+                $ref: "#/components/schemas/PageEventResponse"
+        "403":
+          $ref: "#/components/responses/Err403"
 
 components:
   securitySchemes:
@@ -570,196 +785,384 @@ components:
       name: groupId
       in: path
       required: true
-      schema: { type: string, format: uuid }
+      schema:
+        type: string
+        format: uuid
+
     SessionId:
       name: sessionId
       in: path
       required: true
-      schema: { type: string, format: uuid }
+      schema:
+        type: string
+        format: uuid
+
     UserId:
       name: userId
       in: path
       required: true
-      schema: { type: string, format: uuid }
+      schema:
+        type: string
+        format: uuid
+
     Page:
       name: page
       in: query
-      schema: { type: integer, minimum: 0, default: 0 }
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+
     Size:
       name: size
       in: query
-      schema: { type: integer, minimum: 1, maximum: 200, default: 20 }
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 200
+        default: 20
+
     Sort:
       name: sort
       in: query
-      schema: { type: string, example: "createdAt,desc" }
+      schema:
+        type: string
+        example: "createdAt,desc"
 
   responses:
     Err400:
       description: Bad Request
       content:
         application/json:
-          schema: { $ref: "#/components/schemas/ApiError" }
+          schema:
+            $ref: "#/components/schemas/ApiError"
           examples:
             validation:
-              value: { status: 400, code: VALIDATION_ERROR, message: "Invalid request" }
+              value:
+                status: 400
+                code: VALIDATION_ERROR
+                message: Invalid request
+
     Err401:
       description: Unauthorized
       content:
         application/json:
-          schema: { $ref: "#/components/schemas/ApiError" }
+          schema:
+            $ref: "#/components/schemas/ApiError"
           examples:
             unauthorized:
-              value: { status: 401, code: UNAUTHORIZED, message: "Missing or invalid token" }
+              value:
+                status: 401
+                code: UNAUTHORIZED
+                message: Missing or invalid token
+
     Err403:
       description: Forbidden
       content:
         application/json:
-          schema: { $ref: "#/components/schemas/ApiError" }
+          schema:
+            $ref: "#/components/schemas/ApiError"
           examples:
             forbidden:
-              value: { status: 403, code: FORBIDDEN, message: "Not allowed" }
+              value:
+                status: 403
+                code: FORBIDDEN
+                message: Not allowed
+
     Err404:
       description: Not Found
       content:
         application/json:
-          schema: { $ref: "#/components/schemas/ApiError" }
+          schema:
+            $ref: "#/components/schemas/ApiError"
           examples:
             notFound:
-              value: { status: 404, code: NOT_FOUND, message: "Resource not found" }
+              value:
+                status: 404
+                code: NOT_FOUND
+                message: Resource not found
+
     Err409:
       description: Conflict
       content:
         application/json:
-          schema: { $ref: "#/components/schemas/ApiError" }
+          schema:
+            $ref: "#/components/schemas/ApiError"
           examples:
             conflict:
-              value: { status: 409, code: CONFLICT, message: "Conflict" }
+              value:
+                status: 409
+                code: CONFLICT
+                message: Conflict
+
     Err422:
       description: Unprocessable Entity
       content:
         application/json:
-          schema: { $ref: "#/components/schemas/ApiError" }
+          schema:
+            $ref: "#/components/schemas/ApiError"
           examples:
             rule:
-              value: { status: 422, code: BUSINESS_RULE_VIOLATION, message: "Rule violation" }
+              value:
+                status: 422
+                code: BUSINESS_RULE_VIOLATION
+                message: Rule violation
 
   schemas:
     ApiError:
       type: object
       properties:
-        timestamp: { type: string, format: date-time }
-        status: { type: integer }
-        code: { type: string }
-        message: { type: string }
-        path: { type: string }
-        traceId: { type: string }
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+        code:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+        traceId:
+          type: string
       required: [timestamp, status, code, message, path]
 
-    # --- ENUMS (exact) ---
-    PlatformRole: { type: string, enum: [ADMIN, USER] }
-    UserStatus: { type: string, enum: [ACTIVE, INACTIVE, BANNED] }
-    ApprovalMode: { type: string, enum: [AUTO, MANUAL] }
-    GroupStatus: { type: string, enum: [ACTIVE, ARCHIVED] }
-    MemberRole: { type: string, enum: [OWNER, CO_HOST, MEMBER] }
-    MemberStatus: { type: string, enum: [PENDING, APPROVED, REJECTED, REMOVED] }
-    SessionStatus: { type: string, enum: [OPEN, CLOSED, CANCELLED] }
-    AttendanceStatus: { type: string, enum: [ABSENT, PRESENT, LATE, EXCUSED] }
-    CheckInMethod: { type: string, enum: [QR, MANUAL] }
-    AbsenceRequestStatus: { type: string, enum: [PENDING, APPROVED, REJECTED, CANCELLED] }
+    PlatformRole:
+      type: string
+      enum: [ADMIN, USER]
+
+    UserStatus:
+      type: string
+      enum: [ACTIVE, INACTIVE, BANNED]
+
+    ApprovalMode:
+      type: string
+      enum: [AUTO, MANUAL]
+
+    GroupStatus:
+      type: string
+      enum: [ACTIVE, ARCHIVED]
+
+    MemberRole:
+      type: string
+      enum: [OWNER, CO_HOST, MEMBER]
+
+    MemberStatus:
+      type: string
+      enum: [PENDING, APPROVED, REJECTED, REMOVED]
+
+    SessionStatus:
+      type: string
+      enum: [OPEN, CLOSED, CANCELLED]
+
+    AttendanceStatus:
+      type: string
+      enum: [ABSENT, PRESENT, LATE, EXCUSED]
+
+    CheckInMethod:
+      type: string
+      enum: [QR, MANUAL]
+
+    AbsenceRequestStatus:
+      type: string
+      enum: [PENDING, APPROVED, REJECTED, CANCELLED]
+
     EventType:
       type: string
       enum:
-        [CHECKIN_QR, MARK_MANUAL_PRESENT, MARK_MANUAL_LATE, MARK_MANUAL_ABSENT,
-         MARK_EXCUSED, REVERT_FROM_EXCUSED, SESSION_OPENED, SESSION_CLOSED]
+        - CHECKIN_QR
+        - MARK_MANUAL_PRESENT
+        - MARK_MANUAL_LATE
+        - MARK_MANUAL_ABSENT
+        - MARK_EXCUSED
+        - REVERT_FROM_EXCUSED
+        - SESSION_OPENED
+        - SESSION_CLOSED
 
-    # --- AUTH/ME (users table exact lengths) ---
     LoginRequest:
       type: object
       properties:
-        email: { type: string, format: email, maxLength: 190 }
-        password: { type: string, minLength: 6, maxLength: 200 }
+        email:
+          type: string
+          format: email
+          maxLength: 190
+        password:
+          type: string
+          minLength: 6
+          maxLength: 200
       required: [email, password]
+
+    LoginUserSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        fullName:
+          type: string
+        avatarUrl:
+          type: string
+          nullable: true
+        platformRole:
+          $ref: "#/components/schemas/PlatformRole"
+      required: [id, email, fullName, platformRole]
 
     TokenResponse:
       type: object
       properties:
-        accessToken: { type: string }
-        refreshToken: { type: string }
-        expiresInSeconds: { type: integer }
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresInSeconds:
+          type: integer
+        user:
+          $ref: "#/components/schemas/LoginUserSummary"
       required: [accessToken, expiresInSeconds]
 
     MeResponse:
       type: object
       properties:
-        id: { type: string, format: uuid }
-        email: { type: string, format: email, maxLength: 190 }
-        fullName: { type: string, maxLength: 120 }
-        avatarUrl: { type: string, maxLength: 500 }
-        userCode: { type: string, maxLength: 40 }
-        primaryDeviceId: { type: string, maxLength: 120 }
-        platformRole: { $ref: "#/components/schemas/PlatformRole" }
-        status: { $ref: "#/components/schemas/UserStatus" }
-        createdAt: { type: string, format: date-time }
-        updatedAt: { type: string, format: date-time }
-      required: [id, email, fullName, platformRole, status, createdAt, updatedAt]
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+          maxLength: 190
+        fullName:
+          type: string
+          maxLength: 120
+        avatarUrl:
+          type: string
+          maxLength: 500
+          nullable: true
+        platformRole:
+          $ref: "#/components/schemas/PlatformRole"
+      required: [id, email, fullName, platformRole]
 
     UpdateMeRequest:
       type: object
       properties:
-        fullName: { type: string, minLength: 2, maxLength: 120 }
-        avatarUrl: { type: string, maxLength: 500 }
-        primaryDeviceId: { type: string, maxLength: 120 }
+        fullName:
+          type: string
+          minLength: 2
+          maxLength: 120
+        avatarUrl:
+          type: string
+          maxLength: 500
+        primaryDeviceId:
+          type: string
+          maxLength: 120
 
-    # --- GROUPS (class_groups exact) ---
     CreateGroupRequest:
       type: object
       properties:
-        name: { type: string, minLength: 3, maxLength: 150 }   # chk_groups_name_len
-        code: { type: string, maxLength: 20 }                   # uk_groups_code
-        joinCode: { type: string, minLength: 6, maxLength: 16 } # chk_groups_join_code_len + uk_groups_join_code
-        description: { type: string, maxLength: 1000 }
-        semester: { type: string, maxLength: 30 }
-        room: { type: string, maxLength: 80 }
-        approvalMode: { $ref: "#/components/schemas/ApprovalMode" }
-        allowAutoJoinOnCheckin: { type: boolean, default: false }
+        name:
+          type: string
+          minLength: 3
+          maxLength: 150
+        code:
+          type: string
+          maxLength: 20
+        joinCode:
+          type: string
+          minLength: 6
+          maxLength: 16
+        description:
+          type: string
+          maxLength: 1000
+        semester:
+          type: string
+          maxLength: 30
+        room:
+          type: string
+          maxLength: 80
+        approvalMode:
+          $ref: "#/components/schemas/ApprovalMode"
+        allowAutoJoinOnCheckin:
+          type: boolean
+          default: false
       required: [name, code, approvalMode]
 
     UpdateGroupRequest:
       type: object
       properties:
-        name: { type: string, minLength: 3, maxLength: 150 }
-        joinCode: { type: string, minLength: 6, maxLength: 16 }
-        description: { type: string, maxLength: 1000 }
-        semester: { type: string, maxLength: 30 }
-        room: { type: string, maxLength: 80 }
-        approvalMode: { $ref: "#/components/schemas/ApprovalMode" }
-        allowAutoJoinOnCheckin: { type: boolean }
-        status: { $ref: "#/components/schemas/GroupStatus" }
+        name:
+          type: string
+          minLength: 3
+          maxLength: 150
+        joinCode:
+          type: string
+          minLength: 6
+          maxLength: 16
+        description:
+          type: string
+          maxLength: 1000
+        semester:
+          type: string
+          maxLength: 30
+        room:
+          type: string
+          maxLength: 80
+        approvalMode:
+          $ref: "#/components/schemas/ApprovalMode"
+        allowAutoJoinOnCheckin:
+          type: boolean
+        status:
+          $ref: "#/components/schemas/GroupStatus"
 
     GroupResponse:
       type: object
       properties:
-        id: { type: string, format: uuid }
-        ownerUserId: { type: string, format: uuid }
-        name: { type: string, maxLength: 150 }
-        code: { type: string, maxLength: 20 }
-        joinCode: { type: string, maxLength: 16 }
-        description: { type: string, maxLength: 1000 }
-        semester: { type: string, maxLength: 30 }
-        room: { type: string, maxLength: 80 }
-        approvalMode: { $ref: "#/components/schemas/ApprovalMode" }
-        allowAutoJoinOnCheckin: { type: boolean }
-        status: { $ref: "#/components/schemas/GroupStatus" }
-        createdAt: { type: string, format: date-time }
-        updatedAt: { type: string, format: date-time }
+        id:
+          type: string
+          format: uuid
+        ownerUserId:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 150
+        code:
+          type: string
+          maxLength: 20
+        joinCode:
+          type: string
+          maxLength: 16
+        description:
+          type: string
+          maxLength: 1000
+        semester:
+          type: string
+          maxLength: 30
+        room:
+          type: string
+          maxLength: 80
+        approvalMode:
+          $ref: "#/components/schemas/ApprovalMode"
+        allowAutoJoinOnCheckin:
+          type: boolean
+        status:
+          $ref: "#/components/schemas/GroupStatus"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
       required: [id, ownerUserId, name, code, joinCode, approvalMode, status, createdAt, updatedAt]
 
-    # --- MEMBERS (group_members exact) ---
     JoinGroupRequest:
       type: object
       properties:
-        joinCode: { type: string, minLength: 6, maxLength: 16 }
+        joinCode:
+          type: string
+          minLength: 6
+          maxLength: 16
       required: [joinCode]
 
     MemberActionRequest:
@@ -771,227 +1174,595 @@ components:
         targetRole:
           type: string
           enum: [OWNER, CO_HOST, MEMBER]
-        note: { type: string, maxLength: 500 }
+        note:
+          type: string
+          maxLength: 500
       required: [action]
 
     MemberResponse:
       type: object
       properties:
-        groupId: { type: string, format: uuid }
-        userId: { type: string, format: uuid }
-        role: { $ref: "#/components/schemas/MemberRole" }
-        memberStatus: { $ref: "#/components/schemas/MemberStatus" }
-        joinedAt: { type: string, format: date-time }
-        invitedBy: { type: string, format: uuid }
-        createdAt: { type: string, format: date-time }
-        updatedAt: { type: string, format: date-time }
-        removedAt: { type: string, format: date-time }
+        groupId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        role:
+          $ref: "#/components/schemas/MemberRole"
+        memberStatus:
+          $ref: "#/components/schemas/MemberStatus"
+        joinedAt:
+          type: string
+          format: date-time
+        invitedBy:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        removedAt:
+          type: string
+          format: date-time
       required: [groupId, userId, role, memberStatus, createdAt, updatedAt]
 
-    # --- SESSIONS (attendance_sessions exact) ---
     CreateSessionRequest:
       type: object
       properties:
-        title: { type: string, maxLength: 150 }
-        startAt: { type: string, format: date-time }
-        endAt: { type: string, format: date-time }
-        timeWindowMinutes: { type: integer, minimum: 1, maximum: 300, default: 15 }   # chk_as_window
-        lateAfterMinutes: { type: integer, minimum: 1, maximum: 120, default: 5 }     # chk_as_late + chk_as_late_le_window
-        qrRotateSeconds: { type: integer, minimum: 5, maximum: 120, default: 15 }     # chk_as_rotate
-        checkinOpenAt: { type: string, format: date-time }                            # V4
-        checkinCloseAt: { type: string, format: date-time }                           # V4 + chk_as_checkin_window
-        allowManualOverride: { type: boolean, default: true }                         # TINYINT default 1
-        note: { type: string, maxLength: 500 }
+        title:
+          type: string
+          maxLength: 150
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        timeWindowMinutes:
+          type: integer
+          minimum: 1
+          maximum: 300
+          default: 15
+        lateAfterMinutes:
+          type: integer
+          minimum: 1
+          maximum: 120
+          default: 5
+        qrRotateSeconds:
+          type: integer
+          minimum: 5
+          maximum: 120
+          default: 15
+        checkinOpenAt:
+          type: string
+          format: date-time
+        checkinCloseAt:
+          type: string
+          format: date-time
+        allowManualOverride:
+          type: boolean
+          default: true
+        note:
+          type: string
+          maxLength: 500
       required: [startAt]
 
     CloseSessionRequest:
       type: object
       properties:
-        note: { type: string, maxLength: 500 }
+        note:
+          type: string
+          maxLength: 500
 
     SessionResponse:
       type: object
       properties:
-        id: { type: string, format: uuid }
-        groupId: { type: string, format: uuid }
-        createdByUserId: { type: string, format: uuid }
-        title: { type: string, maxLength: 150 }
-        sessionDate: { type: string, format: date }
-        status: { $ref: "#/components/schemas/SessionStatus" }
-        startAt: { type: string, format: date-time }
-        checkinOpenAt: { type: string, format: date-time }
-        checkinCloseAt: { type: string, format: date-time }
-        endAt: { type: string, format: date-time }
-        timeWindowMinutes: { type: integer }
-        lateAfterMinutes: { type: integer }
-        qrRotateSeconds: { type: integer }
-        allowManualOverride: { type: boolean }
-        note: { type: string, maxLength: 500 }
-        createdAt: { type: string, format: date-time }
-        updatedAt: { type: string, format: date-time }
+        id:
+          type: string
+          format: uuid
+        groupId:
+          type: string
+          format: uuid
+        createdByUserId:
+          type: string
+          format: uuid
+        title:
+          type: string
+          maxLength: 150
+        sessionDate:
+          type: string
+          format: date
+        status:
+          $ref: "#/components/schemas/SessionStatus"
+        startAt:
+          type: string
+          format: date-time
+        checkinOpenAt:
+          type: string
+          format: date-time
+        checkinCloseAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        timeWindowMinutes:
+          type: integer
+        lateAfterMinutes:
+          type: integer
+        qrRotateSeconds:
+          type: integer
+        allowManualOverride:
+          type: boolean
+        note:
+          type: string
+          maxLength: 500
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
       required: [id, groupId, createdByUserId, sessionDate, status, startAt, createdAt, updatedAt]
 
-    # --- QR TOKENS (qr_tokens exact) ---
+    RotateQrRequest:
+      type: object
+      properties:
+        note:
+          type: string
+          maxLength: 500
+
     RotateQrResponse:
       type: object
       properties:
-        sessionId: { type: string, format: uuid }
-        token: { type: string }
-        issuedAt: { type: string, format: date-time }
-        expiresAt: { type: string, format: date-time }
+        sessionId:
+          type: string
+          format: uuid
+        token:
+          type: string
+        issuedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        rotatedFromTokenId:
+          type: string
+          maxLength: 64
+          nullable: true
       required: [sessionId, token, issuedAt, expiresAt]
 
-    # --- ATTENDANCE (session_attendance exact) ---
     QrCheckinRequest:
       type: object
       properties:
-        token: { type: string }
-        deviceId: { type: string, maxLength: 120 }
-        ipAddress: { type: string, maxLength: 45 }
-        userAgent: { type: string, maxLength: 255 }
-        geoLat: { type: number, format: double }
-        geoLng: { type: number, format: double }
-        distanceMeter: { type: integer, minimum: 0 }
+        token:
+          type: string
+        deviceId:
+          type: string
+          maxLength: 120
+        ipAddress:
+          type: string
+          maxLength: 45
+        userAgent:
+          type: string
+          maxLength: 255
+        geoLat:
+          type: number
+          format: double
+        geoLng:
+          type: number
+          format: double
+        distanceMeter:
+          type: integer
+          minimum: 0
       required: [token]
+
+    QrCheckinResponse:
+      type: object
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        attendanceStatus:
+          $ref: "#/components/schemas/AttendanceStatus"
+        checkInAt:
+          type: string
+          format: date-time
+        qrTokenId:
+          type: string
+          maxLength: 64
+      required: [sessionId, userId, attendanceStatus, checkInAt, qrTokenId]
+
+    ReopenCheckinRequest:
+      type: object
+      properties:
+        openFromNowSeconds:
+          type: integer
+          example: -60
+        closeFromNowSeconds:
+          type: integer
+          example: 1800
+        lateAfterMinutes:
+          type: integer
+          minimum: 1
+          maximum: 120
+          example: 10
+        qrRotateSeconds:
+          type: integer
+          minimum: 5
+          maximum: 120
+          example: 120
+
+    ReopenCheckinResponse:
+      type: object
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+        status:
+          $ref: "#/components/schemas/SessionStatus"
+        checkinOpenAt:
+          type: string
+          format: date-time
+        checkinCloseAt:
+          type: string
+          format: date-time
+        lateAfterMinutes:
+          type: integer
+        qrRotateSeconds:
+          type: integer
+      required: [sessionId, status, checkinOpenAt, checkinCloseAt, lateAfterMinutes, qrRotateSeconds]
 
     ManualMarkAttendanceRequest:
       type: object
       properties:
-        status: { $ref: "#/components/schemas/AttendanceStatus" }
-        note: { type: string, maxLength: 500 }
+        status:
+          $ref: "#/components/schemas/AttendanceStatus"
+        note:
+          type: string
+          maxLength: 500
       required: [status]
 
     AttendanceRecordResponse:
       type: object
       properties:
-        sessionId: { type: string, format: uuid }
-        userId: { type: string, format: uuid }
-        attendanceStatus: { $ref: "#/components/schemas/AttendanceStatus" }
-        checkInAt: { type: string, format: date-time }
-        checkInMethod: { $ref: "#/components/schemas/CheckInMethod" }
-        qrTokenId: { type: string, maxLength: 64 }
-        deviceId: { type: string, maxLength: 120 }
-        ipAddress: { type: string, maxLength: 45 }
-        userAgent: { type: string, maxLength: 255 }
-        geoLat: { type: number, format: double }
-        geoLng: { type: number, format: double }
-        distanceMeter: { type: integer, minimum: 0 }
-        suspiciousFlag: { type: boolean }
-        suspiciousReason: { type: string, maxLength: 500 }
-        excusedByRequestId: { type: string, format: uuid }
-        createdAt: { type: string, format: date-time }
-        updatedAt: { type: string, format: date-time }
+        sessionId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        attendanceStatus:
+          $ref: "#/components/schemas/AttendanceStatus"
+        checkInAt:
+          type: string
+          format: date-time
+        checkInMethod:
+          $ref: "#/components/schemas/CheckInMethod"
+        qrTokenId:
+          type: string
+          maxLength: 64
+        deviceId:
+          type: string
+          maxLength: 120
+        ipAddress:
+          type: string
+          maxLength: 45
+        userAgent:
+          type: string
+          maxLength: 255
+        geoLat:
+          type: number
+          format: double
+        geoLng:
+          type: number
+          format: double
+        distanceMeter:
+          type: integer
+          minimum: 0
+        suspiciousFlag:
+          type: boolean
+        suspiciousReason:
+          type: string
+          maxLength: 500
+        excusedByRequestId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
       required: [sessionId, userId, attendanceStatus, createdAt, updatedAt]
 
-    # --- ABSENCE (absence_requests exact) ---
+    ResetAttendanceResponse:
+      type: object
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        attendanceStatus:
+          $ref: "#/components/schemas/AttendanceStatus"
+        checkInAt:
+          type: string
+          format: date-time
+          nullable: true
+        qrTokenId:
+          type: string
+          maxLength: 64
+          nullable: true
+      required: [sessionId, userId, attendanceStatus]
+
     CreateAbsenceRequest:
       type: object
       properties:
-        linkedSessionId: { type: string, format: uuid }
-        requestedDate: { type: string, format: date }
-        reason: { type: string, minLength: 3, maxLength: 500 }    # chk_ar_reason_len
-        evidenceUrl: { type: string, maxLength: 500 }
+        linkedSessionId:
+          type: string
+          format: uuid
+        requestedDate:
+          type: string
+          format: date
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 500
+        evidenceUrl:
+          type: string
+          maxLength: 500
       required: [reason]
       description: "XOR enforced by triggers: exactly one of linkedSessionId or requestedDate."
 
     ReviewAbsenceRequest:
       type: object
       properties:
-        action: { type: string, enum: [APPROVE, REJECT] }
-        reviewerNote: { type: string, maxLength: 500 }
+        action:
+          type: string
+          enum: [APPROVE, REJECT]
+        reviewerNote:
+          type: string
+          maxLength: 500
       required: [action]
 
     AbsenceResponse:
       type: object
       properties:
-        id: { type: string, format: uuid }
-        groupId: { type: string, format: uuid }
-        requesterUserId: { type: string, format: uuid }
-        linkedSessionId: { type: string, format: uuid }
-        requestedDate: { type: string, format: date }
-        reason: { type: string, maxLength: 500 }
-        evidenceUrl: { type: string, maxLength: 500 }
-        requestStatus: { $ref: "#/components/schemas/AbsenceRequestStatus" }
-        reviewerUserId: { type: string, format: uuid }
-        reviewerNote: { type: string, maxLength: 500 }
-        reviewedAt: { type: string, format: date-time }
-        cancelledAt: { type: string, format: date-time }
-        createdAt: { type: string, format: date-time }
-        updatedAt: { type: string, format: date-time }
+        id:
+          type: string
+          format: uuid
+        groupId:
+          type: string
+          format: uuid
+        requesterUserId:
+          type: string
+          format: uuid
+        linkedSessionId:
+          type: string
+          format: uuid
+        requestedDate:
+          type: string
+          format: date
+        reason:
+          type: string
+          maxLength: 500
+        evidenceUrl:
+          type: string
+          maxLength: 500
+        requestStatus:
+          $ref: "#/components/schemas/AbsenceRequestStatus"
+        reviewerUserId:
+          type: string
+          format: uuid
+        reviewerNote:
+          type: string
+          maxLength: 500
+        reviewedAt:
+          type: string
+          format: date-time
+        cancelledAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
       required: [id, groupId, requesterUserId, reason, requestStatus, createdAt, updatedAt]
 
-    # --- EVENTS (attendance_events exact + qr_token_id from V5) ---
     EventResponse:
       type: object
       properties:
-        id: { type: string, format: uuid }
-        sessionId: { type: string, format: uuid }
-        userId: { type: string, format: uuid }
-        actorUserId: { type: string, format: uuid }
-        eventType: { $ref: "#/components/schemas/EventType" }
-        oldStatus: { $ref: "#/components/schemas/AttendanceStatus" }
-        newStatus: { $ref: "#/components/schemas/AttendanceStatus" }
-        qrTokenId: { type: string, maxLength: 64 }
-        eventPayload: { type: object, additionalProperties: true }
-        createdAt: { type: string, format: date-time }
-      required: [id, sessionId, userId, eventType, createdAt]
+        id:
+          type: string
+          format: uuid
+        sessionId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        actorUserId:
+          type: string
+          format: uuid
+        eventType:
+          $ref: "#/components/schemas/EventType"
+        oldStatus:
+          allOf:
+            - $ref: "#/components/schemas/AttendanceStatus"
+          nullable: true
+        newStatus:
+          allOf:
+            - $ref: "#/components/schemas/AttendanceStatus"
+          nullable: true
+        qrTokenId:
+          type: string
+          maxLength: 64
+          nullable: true
+        eventPayload:
+          type: object
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, sessionId, userId, eventType, createdAt, eventPayload]
+
+    AttendanceEventsResponse:
+      type: object
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/AttendanceEventItemResponse"
+      required: [sessionId, items]
+
+    AttendanceEventItemResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        sessionId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        actorUserId:
+          type: string
+          format: uuid
+        eventType:
+          $ref: "#/components/schemas/EventType"
+        oldStatus:
+          allOf:
+            - $ref: "#/components/schemas/AttendanceStatus"
+          nullable: true
+        newStatus:
+          allOf:
+            - $ref: "#/components/schemas/AttendanceStatus"
+          nullable: true
+        qrTokenId:
+          type: string
+          maxLength: 64
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        eventPayload:
+          type: object
+          additionalProperties: true
+      required: [id, sessionId, userId, eventType, createdAt, eventPayload]
 
     PageGroupResponse:
       type: object
       properties:
-        items: { type: array, items: { $ref: "#/components/schemas/GroupResponse" } }
-        page: { type: integer }
-        size: { type: integer }
-        totalElements: { type: integer }
-        totalPages: { type: integer }
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/GroupResponse"
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
       required: [items, page, size, totalElements, totalPages]
 
     PageMemberResponse:
       type: object
       properties:
-        items: { type: array, items: { $ref: "#/components/schemas/MemberResponse" } }
-        page: { type: integer }
-        size: { type: integer }
-        totalElements: { type: integer }
-        totalPages: { type: integer }
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/MemberResponse"
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
       required: [items, page, size, totalElements, totalPages]
 
     PageSessionResponse:
       type: object
       properties:
-        items: { type: array, items: { $ref: "#/components/schemas/SessionResponse" } }
-        page: { type: integer }
-        size: { type: integer }
-        totalElements: { type: integer }
-        totalPages: { type: integer }
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SessionResponse"
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
       required: [items, page, size, totalElements, totalPages]
 
     PageAttendanceResponse:
       type: object
       properties:
-        items: { type: array, items: { $ref: "#/components/schemas/AttendanceRecordResponse" } }
-        page: { type: integer }
-        size: { type: integer }
-        totalElements: { type: integer }
-        totalPages: { type: integer }
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/AttendanceRecordResponse"
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
       required: [items, page, size, totalElements, totalPages]
 
     PageAbsenceResponse:
       type: object
       properties:
-        items: { type: array, items: { $ref: "#/components/schemas/AbsenceResponse" } }
-        page: { type: integer }
-        size: { type: integer }
-        totalElements: { type: integer }
-        totalPages: { type: integer }
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/AbsenceResponse"
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
       required: [items, page, size, totalElements, totalPages]
 
     PageEventResponse:
       type: object
       properties:
-        items: { type: array, items: { $ref: "#/components/schemas/EventResponse" } }
-        page: { type: integer }
-        size: { type: integer }
-        totalElements: { type: integer }
-        totalPages: { type: integer }
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/EventResponse"
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
       required: [items, page, size, totalElements, totalPages]

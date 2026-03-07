@@ -5,14 +5,13 @@ import com.attendance.backend.attendance.repository.QrTokenRepository;
 import com.attendance.backend.common.exception.ApiException;
 import com.attendance.backend.domain.entity.AttendanceSession;
 import com.attendance.backend.domain.entity.QrToken;
-import com.attendance.backend.domain.enums.MemberRole;
-import com.attendance.backend.domain.enums.MemberStatus;
 import com.attendance.backend.domain.enums.SessionStatus;
 import jakarta.persistence.EntityManager;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.time.Clock;
@@ -40,6 +39,25 @@ public class QrTokenRotateService {
         this.entityManager = entityManager;
     }
 
+    private static String newTokenId() {
+        return "qt_" + UUID.randomUUID().toString().replace("-", ""); // ~35 chars, <= 64
+    }
+
+    private static String newSecret() {
+        byte[] b = new byte[18];
+        RNG.nextBytes(b);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(b);
+    }
+
+    private static byte[] sha256(String raw) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            return md.digest(raw.getBytes(StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            throw new IllegalStateException("SHA-256 not available", e);
+        }
+    }
+
     @Transactional
     public RotateResult rotate(UUID sessionId, UUID actorUserId, String note) {
         final Instant now = Instant.now(clock);
@@ -53,6 +71,19 @@ public class QrTokenRotateService {
 
         ensureHostOrCoHost(session.getGroupId(), actorUserId);
 
+        int rotateSeconds = 15;
+        Integer cfg = session.getQrRotateSeconds();
+        if (cfg != null && cfg > 0) rotateSeconds = cfg;
+
+        Instant expiresAt = now.plusSeconds(rotateSeconds);
+        if (!expiresAt.isAfter(now)) {
+            throw ApiException.unprocessable("TOKEN_EXP_INVALID", "expiresAt must be after issuedAt");
+        }
+
+        if (note != null && note.length() > 255) {
+            throw ApiException.badRequest("NOTE_TOO_LONG", "note max length is 255");
+        }
+
         String rotatedFrom = qrTokenRepository.findLatestActiveForUpdate(sessionId, now)
                 .map(QrToken::getTokenId)
                 .orElse(null);
@@ -60,19 +91,10 @@ public class QrTokenRotateService {
         qrTokenRepository.revokeActiveTokens(sessionId, now, "ROTATED");
 
         final int maxAttempts = 5;
-        for (int i = 0; i < maxAttempts; i++) {
-            String tokenId = randomBase64Url(32);
-            String secret = randomBase64Url(32);
+        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+            String tokenId = newTokenId();
+            String secret = newSecret();
             byte[] tokenHash = sha256(secret);
-
-            Instant expiresAt = now.plusSeconds(session.getQrRotateSeconds());
-            if (!expiresAt.isAfter(now)) {
-                throw ApiException.unprocessable("TOKEN_EXP_INVALID", "expiresAt must be after issuedAt");
-            }
-
-            if (note != null && note.length() > 255) {
-                throw ApiException.badRequest("NOTE_TOO_LONG", "note max length is 255");
-            }
 
             QrToken t = new QrToken();
             t.setTokenId(tokenId);
@@ -90,8 +112,12 @@ public class QrTokenRotateService {
                 qrTokenRepository.saveAndFlush(t);
                 return new RotateResult(sessionId, tokenId + "." + secret, now, expiresAt, rotatedFrom);
             } catch (DataIntegrityViolationException ex) {
+                if (attempt == maxAttempts) throw ex;
+
                 String msg = rootMessage(ex);
-                if (msg.contains("uk_qt_token_hash") || msg.contains("Duplicate entry") || msg.contains("PRIMARY")) {
+                if (msg.contains("uk_qt_token_hash")
+                        || msg.contains("Duplicate entry")
+                        || msg.contains("PRIMARY")) {
                     continue;
                 }
                 throw ex;
@@ -102,38 +128,20 @@ public class QrTokenRotateService {
     }
 
     private void ensureHostOrCoHost(UUID groupId, UUID actorUserId) {
-        Long count = entityManager.createQuery("""
-                select count(gm)
-                from GroupMember gm
-                where gm.id.groupId = :groupId
-                  and gm.id.userId = :userId
-                  and gm.memberStatus = :status
-                  and gm.role in (:r1, :r2)
-                """, Long.class)
-                .setParameter("groupId", groupId)
-                .setParameter("userId", actorUserId)
-                .setParameter("status", MemberStatus.APPROVED)
-                .setParameter("r1", MemberRole.OWNER)
-                .setParameter("r2", MemberRole.CO_HOST)
+        Number cnt = (Number) entityManager.createNativeQuery("""
+        select count(*)
+        from group_members gm
+        where gm.group_id = UUID_TO_BIN(:groupId, 1)
+          and gm.user_id  = UUID_TO_BIN(:userId, 1)
+          and gm.member_status = 'APPROVED'
+          and gm.role in ('OWNER','CO_HOST')
+    """)
+                .setParameter("groupId", groupId.toString())
+                .setParameter("userId", actorUserId.toString())
                 .getSingleResult();
 
-        if (count == null || count == 0L) {
+        if (cnt == null || cnt.longValue() == 0L) {
             throw ApiException.forbidden("FORBIDDEN", "Only OWNER/CO_HOST can rotate QR");
-        }
-    }
-
-    private static String randomBase64Url(int bytes) {
-        byte[] b = new byte[bytes];
-        RNG.nextBytes(b);
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(b);
-    }
-
-    private static byte[] sha256(String raw) {
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            return md.digest(raw.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-        } catch (Exception e) {
-            throw new IllegalStateException("SHA-256 not available", e);
         }
     }
 

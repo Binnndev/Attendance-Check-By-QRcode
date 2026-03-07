@@ -46,3 +46,9 @@ app:
     issuer: "attendance-dev"
     secret: "dev-secret-please-change-32bytes-minimum-123456"
     access-token-minutes: 60
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,mappings

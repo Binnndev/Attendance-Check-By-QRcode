@@ -11,8 +11,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 public class AuthService {
 
@@ -43,9 +41,9 @@ public class AuthService {
             throw ApiException.unauthorized("INVALID_CREDENTIALS", "Invalid email or password");
         }
 
-        PlatformRole platformRole = user.getPlatformRole() != null ? user.getPlatformRole() : PlatformRole.USER;
+        PlatformRole platformRole = (user.getPlatformRole() != null) ? user.getPlatformRole() : PlatformRole.USER;
 
-        String accessToken = jwtService.generateAccessToken(user.getId(), List.of(platformRole.name()));
+        String accessToken = jwtService.generateAccessToken(user.getId(), platformRole.name());
 
         return new AuthDtos.LoginResponse(
                 "Bearer",
@@ -54,7 +52,7 @@ public class AuthService {
                 new AuthDtos.UserInfo(
                         user.getId(),
                         user.getEmail(),
-                        null,
+                        user.getFullName(),
                         platformRole.name()
                 )
         );

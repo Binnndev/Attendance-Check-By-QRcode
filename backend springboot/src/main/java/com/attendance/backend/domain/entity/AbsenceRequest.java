@@ -1,6 +1,8 @@
 package com.attendance.backend.domain.entity;
 
 import com.attendance.backend.common.persistence.UuidBinary16SwapConverter;
+import com.attendance.backend.common.persistence.MysqlUuidBinary16SwapType;
+import org.hibernate.annotations.Type;
 import com.attendance.backend.domain.enums.AbsenceRequestStatus;
 import jakarta.persistence.*;
 import java.time.Instant;
@@ -17,8 +19,8 @@ import java.util.UUID;
 )
 public class AbsenceRequest {
     @Id
-    @Column(name="id", columnDefinition="BINARY(16)", nullable=false)
-    @Convert(converter = UuidBinary16SwapConverter.class)
+    @Type(value = MysqlUuidBinary16SwapType.class)
+    @Column(name = "id", columnDefinition = "BINARY(16)")
     public UUID id;
 
     @Column(name="group_id", columnDefinition="BINARY(16)", nullable=false)
@@ -33,35 +35,36 @@ public class AbsenceRequest {
     @Convert(converter = UuidBinary16SwapConverter.class)
     public UUID linkedSessionId;
 
-    @Column(name="requested_date")
-    public LocalDate requestedDate;
-
-    @Column(name="reason", length=500, nullable=false)
-    public String reason;
-
-    @Column(name="evidence_url", length=500)
-    public String evidenceUrl;
-
+    @Column(name="request_status", nullable=false, length=20)
     @Enumerated(EnumType.STRING)
-    @Column(name="request_status", nullable=false)
-    public AbsenceRequestStatus requestStatus = AbsenceRequestStatus.PENDING;
+    public AbsenceRequestStatus requestStatus;
+
+    @Column(name="request_reason", length=500, nullable=false)
+    public String requestReason;
+
+    @Column(name="requested_date", nullable=false)
+    public LocalDate requestedDate;
 
     @Column(name="reviewer_user_id", columnDefinition="BINARY(16)")
     @Convert(converter = UuidBinary16SwapConverter.class)
     public UUID reviewerUserId;
 
-    @Column(name="reviewer_note", length=500)
-    public String reviewerNote;
-
     @Column(name="reviewed_at")
     public Instant reviewedAt;
 
-    @Column(name="created_at", nullable=false)
-    public Instant createdAt;
-
-    @Column(name="updated_at", nullable=false)
-    public Instant updatedAt;
-
     @Column(name="cancelled_at")
     public Instant cancelledAt;
+
+    @Column(name="created_at", nullable=false, insertable=false, updatable=false)
+    public Instant createdAt;
+
+    @Column(name="updated_at", nullable=false, insertable=false, updatable=false)
+    public Instant updatedAt;
+
+    public AbsenceRequest() {}
+
+    public boolean isPending() { return requestStatus == AbsenceRequestStatus.PENDING; }
+    public boolean isApproved() { return requestStatus == AbsenceRequestStatus.APPROVED; }
+    public boolean isRejected() { return requestStatus == AbsenceRequestStatus.REJECTED; }
+    public boolean isCancelled() { return requestStatus == AbsenceRequestStatus.CANCELLED; }
 }

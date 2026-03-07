@@ -2,21 +2,25 @@ package com.attendance.backend.attendance.repository;
 
 import com.attendance.backend.domain.entity.AttendanceSession;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import jakarta.persistence.LockModeType;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface AttendanceSessionRepository extends JpaRepository<AttendanceSession, UUID> {
 
-    @Lock(LockModeType.PESSIMISTIC_READ)
-    @Query("select s from AttendanceSession s where s.id = :id")
-    Optional<AttendanceSession> findByIdForShare(@Param("id") UUID id);
+    @Query(value = "select * from attendance_sessions where id = UUID_TO_BIN(:id, 1) for share", nativeQuery = true)
+    Optional<AttendanceSession> findByIdForShare(@Param("id") String id);
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select s from AttendanceSession s where s.id = :id")
-    Optional<AttendanceSession> findByIdForUpdate(@Param("id") UUID id);
+    @Query(value = "select * from attendance_sessions where id = UUID_TO_BIN(:id, 1) for update", nativeQuery = true)
+    Optional<AttendanceSession> findByIdForUpdate(@Param("id") String id);
+
+    default Optional<AttendanceSession> findByIdForShare(UUID id) {
+        return findByIdForShare(id.toString());
+    }
+
+    default Optional<AttendanceSession> findByIdForUpdate(UUID id) {
+        return findByIdForUpdate(id.toString());
+    }
 }

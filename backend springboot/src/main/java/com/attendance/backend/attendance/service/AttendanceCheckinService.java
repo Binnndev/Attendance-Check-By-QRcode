@@ -173,48 +173,34 @@ public class AttendanceCheckinService {
     }
 
     private SessionAttendance getOrCreateAttendanceLocked(UUID sessionId, UUID userId, Instant now) {
-        SessionAttendance existing = sessionAttendanceRepository
-                .findBySessionAndUserForUpdate(sessionId, userId)
-                .orElse(null);
+        SessionAttendanceId id = new SessionAttendanceId(sessionId, userId);
 
+        // Lock chuẩn bằng entityManager (SELECT ... FOR UPDATE)
+        SessionAttendance existing = entityManager.find(SessionAttendance.class, id, LockModeType.PESSIMISTIC_WRITE);
         if (existing != null) return existing;
 
         SessionAttendance created = SessionAttendance.createNew(sessionId, userId);
         created.createdAt = now;
         created.updatedAt = now;
 
-        try {
-            return sessionAttendanceRepository.saveAndFlush(created);
-        } catch (DataIntegrityViolationException ex) {
-            String root = rootMessage(ex);
-            boolean duplicatePk = root.contains("Duplicate entry") && root.contains("PRIMARY");
-            if (!duplicatePk) {
-                throw dbErrorTranslator.translate(ex);
-            }
-
-            return sessionAttendanceRepository
-                    .findBySessionAndUserForUpdate(sessionId, userId)
-                    .orElseThrow(() -> ApiException.conflict(
-                            "ATTENDANCE_UPSERT_FAILED",
-                            "Cannot create attendance record"
-                    ));
-        }
+        entityManager.persist(created);
+        entityManager.flush(); // flush sớm để bắt lỗi rõ ngay tại đây
+        return created;
     }
 
     private void ensureApprovedMember(UUID groupId, UUID userId) {
-        Long count = entityManager.createQuery("""
-                        select count(gm)
-                        from GroupMember gm
-                        where gm.id.groupId = :groupId
-                          and gm.id.userId = :userId
-                          and gm.memberStatus = :status
-                        """, Long.class)
-                .setParameter("groupId", groupId)
-                .setParameter("userId", userId)
-                .setParameter("status", MemberStatus.APPROVED)
+        Number cnt = (Number) entityManager.createNativeQuery("""
+        select count(*)
+        from group_members gm
+        where gm.group_id = UUID_TO_BIN(:groupId, 1)
+          and gm.user_id  = UUID_TO_BIN(:userId, 1)
+          and gm.member_status = 'APPROVED'
+    """)
+                .setParameter("groupId", groupId.toString())
+                .setParameter("userId", userId.toString())
                 .getSingleResult();
 
-        if (count == null || count == 0L) {
+        if (cnt == null || cnt.longValue() == 0L) {
             throw ApiException.forbidden("NOT_A_GROUP_MEMBER", "User is not an APPROVED member of this group");
         }
     }
