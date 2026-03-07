@@ -1013,15 +1013,17 @@ components:
     TokenResponse:
       type: object
       properties:
+        tokenType:
+          type: string
+          example: Bearer
         accessToken:
           type: string
-        refreshToken:
+        accessTokenExpiresAt:
           type: string
-        expiresInSeconds:
-          type: integer
+          format: date-time
         user:
           $ref: "#/components/schemas/LoginUserSummary"
-      required: [accessToken, expiresInSeconds]
+      required: [ tokenType, accessToken, accessTokenExpiresAt, user ]
 
     MeResponse:
       type: object
