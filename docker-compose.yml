@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  # Cấu hình Database MySQL
+  mysql-db:
+    image: mysql:8.0
+    container_name: mysql-server
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: qr_attendance       # Đã thống nhất tên với application.yml
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  # Cấu hình Backend Spring Boot
+  spring-backend:
+    build: 
+      context: ./backend-springboot       
+    container_name: spring-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql-db                          
+    environment:
+      # Cập nhật URL: dùng tên db qr_attendance và thêm characterEncoding
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/qr_attendance?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&characterEncoding=utf8
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 123456  # Đã sửa lại cho khớp
+      # Xóa hoặc set none để nhường quyền tạo bảng cho Flyway
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none 
+
+volumes:
+  mysql-data:
