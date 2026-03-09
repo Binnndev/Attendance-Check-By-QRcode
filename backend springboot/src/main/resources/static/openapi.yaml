@@ -42,41 +42,6 @@ paths:
         "401":
           $ref: "#/components/responses/Err401"
 
-  /me:
-    get:
-      tags: [Me]
-      summary: Get my profile
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/MeResponse"
-        "401":
-          $ref: "#/components/responses/Err401"
-
-    patch:
-      tags: [Me]
-      summary: Update my profile
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateMeRequest"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/MeResponse"
-        "400":
-          $ref: "#/components/responses/Err400"
-        "401":
-          $ref: "#/components/responses/Err401"
-
   /groups:
     post:
       tags: [Groups]
@@ -134,7 +99,7 @@ paths:
 
     patch:
       tags: [Groups]
-      summary: Update group (OWNER/ADMIN)
+      summary: Update group (OWNER)
       parameters:
         - $ref: "#/components/parameters/GroupId"
       requestBody:
@@ -162,7 +127,7 @@ paths:
   /groups/{groupId}/archive:
     post:
       tags: [Groups]
-      summary: Archive group (OWNER/ADMIN)
+      summary: Archive group (OWNER)
       parameters:
         - $ref: "#/components/parameters/GroupId"
       responses:
@@ -202,7 +167,7 @@ paths:
   /groups/{groupId}/members:
     get:
       tags: [Members]
-      summary: List members (OWNER/CO_HOST/ADMIN)
+      summary: List members (OWNER/CO_HOST)
       parameters:
         - $ref: "#/components/parameters/GroupId"
         - $ref: "#/components/parameters/Page"
@@ -261,7 +226,7 @@ paths:
   /groups/{groupId}/sessions:
     post:
       tags: [Sessions]
-      summary: Create session (OWNER/CO_HOST/ADMIN)
+      summary: Create session (OWNER/CO_HOST)
       description: >
         DB enforces one OPEN session per group via UNIQUE KEY uk_as_group_single_open (group_id, is_open).
         V4 adds checkin_open_at/checkin_close_at and CHECK chk_as_checkin_window.
@@ -353,7 +318,7 @@ paths:
   /sessions/{sessionId}/close:
     post:
       tags: [Sessions]
-      summary: Close session (OWNER/CO_HOST/ADMIN)
+      summary: Close session (OWNER/CO_HOST)
       parameters:
         - $ref: "#/components/parameters/SessionId"
       requestBody:
@@ -377,7 +342,7 @@ paths:
   /sessions/{sessionId}/cancel:
     post:
       tags: [Sessions]
-      summary: Cancel session (OWNER/CO_HOST/ADMIN)
+      summary: Cancel session (OWNER/CO_HOST)
       parameters:
         - $ref: "#/components/parameters/SessionId"
       responses:
@@ -393,7 +358,7 @@ paths:
   /sessions/{sessionId}/qr/rotate:
     post:
       tags: [QR]
-      summary: Rotate QR token (OWNER/CO_HOST/ADMIN)
+      summary: Rotate QR token (OWNER/CO_HOST)
       description: >
         qr_tokens.token_id VARCHAR(64) ascii_bin PK.
         token_hash VARBINARY(32) UNIQUE uk_qt_token_hash.
@@ -448,6 +413,8 @@ paths:
                 $ref: "#/components/schemas/QrCheckinResponse"
         "400":
           $ref: "#/components/responses/Err400"
+        "401":
+          $ref: "#/components/responses/Err401"
         "403":
           $ref: "#/components/responses/Err403"
         "409":
@@ -478,6 +445,8 @@ paths:
                 $ref: "#/components/schemas/ReopenCheckinResponse"
         "400":
           $ref: "#/components/responses/Err400"
+        "401":
+          $ref: "#/components/responses/Err401"
         "403":
           $ref: "#/components/responses/Err403"
         "404":
@@ -488,7 +457,7 @@ paths:
   /sessions/{sessionId}/attendance:
     get:
       tags: [Attendance]
-      summary: List attendance of session (OWNER/CO_HOST/ADMIN)
+      summary: List attendance of session (OWNER/CO_HOST)
       parameters:
         - $ref: "#/components/parameters/SessionId"
         - $ref: "#/components/parameters/Page"
@@ -506,7 +475,7 @@ paths:
   /sessions/{sessionId}/attendance/{userId}:
     post:
       tags: [Attendance]
-      summary: Manual mark attendance (OWNER/CO_HOST/ADMIN, allow_manual_override must be 1)
+      summary: Manual mark attendance (OWNER/CO_HOST, allow_manual_override must be 1)
       parameters:
         - $ref: "#/components/parameters/SessionId"
         - $ref: "#/components/parameters/UserId"
@@ -545,6 +514,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ResetAttendanceResponse"
+        "401":
+          $ref: "#/components/responses/Err401"
         "403":
           $ref: "#/components/responses/Err403"
         "404":
@@ -584,6 +555,8 @@ paths:
                 $ref: "#/components/schemas/AttendanceEventsResponse"
         "400":
           $ref: "#/components/responses/Err400"
+        "401":
+          $ref: "#/components/responses/Err401"
         "403":
           $ref: "#/components/responses/Err403"
         "404":
@@ -615,7 +588,7 @@ paths:
 
     get:
       tags: [Absence]
-      summary: List absence requests (OWNER/CO_HOST/ADMIN)
+      summary: List absence requests (OWNER/CO_HOST)
       parameters:
         - $ref: "#/components/parameters/GroupId"
         - name: status
@@ -660,7 +633,7 @@ paths:
   /absence-requests/{requestId}/review:
     patch:
       tags: [Absence]
-      summary: Review absence request (OWNER/CO_HOST/ADMIN)
+      summary: Review absence request (OWNER/CO_HOST)
       parameters:
         - name: requestId
           in: path
@@ -689,7 +662,7 @@ paths:
   /absence-requests/{requestId}/cancel:
     post:
       tags: [Absence]
-      summary: Cancel absence request (requester or ADMIN)
+      summary: Cancel absence request (requester)
       parameters:
         - name: requestId
           in: path
@@ -712,7 +685,7 @@ paths:
   /sessions/{sessionId}/events:
     get:
       tags: [Events]
-      summary: List session events (OWNER/CO_HOST/ADMIN). attendance_events immutable by trigger.
+      summary: List session events (OWNER/CO_HOST). attendance_events immutable by trigger.
       parameters:
         - $ref: "#/components/parameters/SessionId"
         - $ref: "#/components/parameters/Page"
@@ -744,7 +717,7 @@ paths:
   /groups/{groupId}/events:
     get:
       tags: [Events]
-      summary: List group events (OWNER/CO_HOST/ADMIN)
+      summary: List group events (OWNER/CO_HOST)
       parameters:
         - $ref: "#/components/parameters/GroupId"
         - $ref: "#/components/parameters/Page"
@@ -1345,22 +1318,13 @@ components:
         deviceId:
           type: string
           maxLength: 120
-        ipAddress:
-          type: string
-          maxLength: 45
-        userAgent:
-          type: string
-          maxLength: 255
         geoLat:
           type: number
           format: double
         geoLng:
           type: number
           format: double
-        distanceMeter:
-          type: integer
-          minimum: 0
-      required: [token]
+      required: [ token ]
 
     QrCheckinResponse:
       type: object

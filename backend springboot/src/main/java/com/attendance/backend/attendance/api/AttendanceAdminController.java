@@ -30,7 +30,7 @@ public class AttendanceAdminController {
             @RequestBody(required = false) ReopenCheckinRequest req
     ) {
         if (me == null) {
-            throw ApiException.forbidden("UNAUTHORIZED", "Missing JWT principal");
+            throw ApiException.unauthorized("UNAUTHORIZED", "Missing JWT principal");
         }
 
         Integer openFromNowSeconds = req == null ? null : req.openFromNowSeconds();
@@ -64,7 +64,7 @@ public class AttendanceAdminController {
             @AuthenticationPrincipal UserPrincipal me
     ) {
         if (me == null) {
-            throw ApiException.forbidden("UNAUTHORIZED", "Missing JWT principal");
+            throw ApiException.unauthorized("UNAUTHORIZED", "Missing JWT principal");
         }
 
         var result = attendanceAdminService.resetAttendance(
@@ -90,7 +90,7 @@ public class AttendanceAdminController {
             @RequestParam(required = false) Integer limit
     ) {
         if (me == null) {
-            throw ApiException.forbidden("UNAUTHORIZED", "Missing JWT principal");
+            throw ApiException.unauthorized("UNAUTHORIZED", "Missing JWT principal");
         }
 
         var result = attendanceAdminService.getAttendanceEvents(

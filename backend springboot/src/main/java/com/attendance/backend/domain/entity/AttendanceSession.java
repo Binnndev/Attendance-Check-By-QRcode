@@ -1,10 +1,18 @@
 package com.attendance.backend.domain.entity;
 
-import com.attendance.backend.common.persistence.UuidBinary16SwapConverter;
 import com.attendance.backend.common.persistence.MysqlUuidBinary16SwapType;
-import org.hibernate.annotations.Type;
+import com.attendance.backend.common.persistence.UuidBinary16SwapConverter;
 import com.attendance.backend.domain.enums.SessionStatus;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import org.hibernate.annotations.Type;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -36,8 +44,8 @@ public class AttendanceSession {
     @Convert(converter = UuidBinary16SwapConverter.class)
     private UUID createdByUserId;
 
-    @Column(name = "session_name", length = 120, nullable = false)
-    private String sessionName;
+    @Column(name = "title", length = 150)
+    private String title;
 
     @Column(name = "session_date", nullable = false)
     private LocalDate sessionDate;
@@ -45,7 +53,7 @@ public class AttendanceSession {
     @Column(name = "start_at", nullable = false)
     private Instant startAt;
 
-    @Column(name = "end_at", nullable = false)
+    @Column(name = "end_at")
     private Instant endAt;
 
     @Enumerated(EnumType.STRING)
@@ -64,6 +72,9 @@ public class AttendanceSession {
     @Column(name = "qr_rotate_seconds", nullable = false)
     private int qrRotateSeconds;
 
+    @Column(name = "session_secret", nullable = false, length = 255)
+    private String sessionSecret;
+
     @Column(name = "allow_manual_override", nullable = false)
     private byte allowManualOverride;
 
@@ -72,6 +83,9 @@ public class AttendanceSession {
 
     @Column(name = "checkin_close_at")
     private Instant checkinCloseAt;
+
+    @Column(name = "note", length = 500)
+    private String note;
 
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private Instant createdAt;
@@ -84,57 +98,173 @@ public class AttendanceSession {
 
     public AttendanceSession() {}
 
-    public boolean isAllowManualOverride() { return allowManualOverride == 1; }
-    public void setAllowManualOverride(boolean allowManualOverride) { this.allowManualOverride = (byte) (allowManualOverride ? 1 : 0); }
+    public boolean isAllowManualOverride() {
+        return allowManualOverride == 1;
+    }
 
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
+    public void setAllowManualOverride(boolean allowManualOverride) {
+        this.allowManualOverride = (byte) (allowManualOverride ? 1 : 0);
+    }
 
-    public UUID getGroupId() { return groupId; }
-    public void setGroupId(UUID groupId) { this.groupId = groupId; }
+    public UUID getId() {
+        return id;
+    }
 
-    public UUID getCreatedByUserId() { return createdByUserId; }
-    public void setCreatedByUserId(UUID createdByUserId) { this.createdByUserId = createdByUserId; }
+    public void setId(UUID id) {
+        this.id = id;
+    }
 
-    public String getSessionName() { return sessionName; }
-    public void setSessionName(String sessionName) { this.sessionName = sessionName; }
+    public UUID getGroupId() {
+        return groupId;
+    }
 
-    public LocalDate getSessionDate() { return sessionDate; }
-    public void setSessionDate(LocalDate sessionDate) { this.sessionDate = sessionDate; }
+    public void setGroupId(UUID groupId) {
+        this.groupId = groupId;
+    }
 
-    public Instant getStartAt() { return startAt; }
-    public void setStartAt(Instant startAt) { this.startAt = startAt; }
+    public UUID getCreatedByUserId() {
+        return createdByUserId;
+    }
 
-    public Instant getEndAt() { return endAt; }
-    public void setEndAt(Instant endAt) { this.endAt = endAt; }
+    public void setCreatedByUserId(UUID createdByUserId) {
+        this.createdByUserId = createdByUserId;
+    }
 
-    public SessionStatus getStatus() { return status; }
-    public void setStatus(SessionStatus status) { this.status = status; }
+    public String getTitle() {
+        return title;
+    }
 
-    public boolean isOpen() { return Boolean.TRUE.equals(open); }
-    public void setOpen(boolean open) { this.open = open; }
+    public void setTitle(String title) {
+        this.title = title;
+    }
 
-    public int getTimeWindowMinutes() { return timeWindowMinutes; }
-    public void setTimeWindowMinutes(int timeWindowMinutes) { this.timeWindowMinutes = timeWindowMinutes; }
+    @Deprecated
+    public String getSessionName() {
+        return title;
+    }
 
-    public int getLateAfterMinutes() { return lateAfterMinutes; }
-    public void setLateAfterMinutes(int lateAfterMinutes) { this.lateAfterMinutes = lateAfterMinutes; }
+    @Deprecated
+    public void setSessionName(String sessionName) {
+        this.title = sessionName;
+    }
 
-    public int getQrRotateSeconds() { return qrRotateSeconds; }
-    public void setQrRotateSeconds(int qrRotateSeconds) { this.qrRotateSeconds = qrRotateSeconds; }
+    public LocalDate getSessionDate() {
+        return sessionDate;
+    }
 
-    public byte getAllowManualOverride() { return allowManualOverride; }
-    public void setAllowManualOverride(byte allowManualOverride) { this.allowManualOverride = allowManualOverride; }
+    public void setSessionDate(LocalDate sessionDate) {
+        this.sessionDate = sessionDate;
+    }
 
-    public Instant getCheckinOpenAt() { return checkinOpenAt; }
-    public void setCheckinOpenAt(Instant checkinOpenAt) { this.checkinOpenAt = checkinOpenAt; }
+    public Instant getStartAt() {
+        return startAt;
+    }
 
-    public Instant getCheckinCloseAt() { return checkinCloseAt; }
-    public void setCheckinCloseAt(Instant checkinCloseAt) { this.checkinCloseAt = checkinCloseAt; }
+    public void setStartAt(Instant startAt) {
+        this.startAt = startAt;
+    }
 
-    public Instant getCreatedAt() { return createdAt; }
-    public Instant getUpdatedAt() { return updatedAt; }
+    public Instant getEndAt() {
+        return endAt;
+    }
 
-    public Instant getDeletedAt() { return deletedAt; }
-    public void setDeletedAt(Instant deletedAt) { this.deletedAt = deletedAt; }
+    public void setEndAt(Instant endAt) {
+        this.endAt = endAt;
+    }
+
+    public SessionStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(SessionStatus status) {
+        this.status = status;
+    }
+
+    public boolean isOpen() {
+        return Boolean.TRUE.equals(open);
+    }
+
+    public void setOpen(boolean open) {
+        this.open = open;
+    }
+
+    public int getTimeWindowMinutes() {
+        return timeWindowMinutes;
+    }
+
+    public void setTimeWindowMinutes(int timeWindowMinutes) {
+        this.timeWindowMinutes = timeWindowMinutes;
+    }
+
+    public int getLateAfterMinutes() {
+        return lateAfterMinutes;
+    }
+
+    public void setLateAfterMinutes(int lateAfterMinutes) {
+        this.lateAfterMinutes = lateAfterMinutes;
+    }
+
+    public int getQrRotateSeconds() {
+        return qrRotateSeconds;
+    }
+
+    public void setQrRotateSeconds(int qrRotateSeconds) {
+        this.qrRotateSeconds = qrRotateSeconds;
+    }
+
+    public byte getAllowManualOverride() {
+        return allowManualOverride;
+    }
+
+    public void setAllowManualOverride(byte allowManualOverride) {
+        this.allowManualOverride = allowManualOverride;
+    }
+
+    public String getSessionSecret() {
+        return sessionSecret;
+    }
+
+    public void setSessionSecret(String sessionSecret) {
+        this.sessionSecret = sessionSecret;
+    }
+
+    public Instant getCheckinOpenAt() {
+        return checkinOpenAt;
+    }
+
+    public void setCheckinOpenAt(Instant checkinOpenAt) {
+        this.checkinOpenAt = checkinOpenAt;
+    }
+
+    public Instant getCheckinCloseAt() {
+        return checkinCloseAt;
+    }
+
+    public void setCheckinCloseAt(Instant checkinCloseAt) {
+        this.checkinCloseAt = checkinCloseAt;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public Instant getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(Instant deletedAt) {
+        this.deletedAt = deletedAt;
+    }
 }

@@ -1,11 +1,13 @@
 package com.attendance.backend.auth.api;
 
-import com.attendance.backend.common.exception.ApiException;
-import com.attendance.backend.security.UserPrincipal;
-import com.attendance.backend.domain.entity.User;
 import com.attendance.backend.auth.repository.UserRepository;
+import com.attendance.backend.common.exception.ApiException;
+import com.attendance.backend.domain.entity.User;
+import com.attendance.backend.security.UserPrincipal;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
 
@@ -22,7 +24,7 @@ public class MeController {
     @GetMapping("/me")
     public MeResponse me(@AuthenticationPrincipal UserPrincipal principal) {
         if (principal == null) {
-            throw ApiException.forbidden("UNAUTHORIZED", "Missing JWT principal");
+            throw ApiException.unauthorized("UNAUTHORIZED", "Missing JWT principal");
         }
 
         UUID userId = principal.getUserId();

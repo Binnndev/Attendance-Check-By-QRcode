@@ -32,20 +32,22 @@ public class AttendanceAdminService {
     private final AttendanceEventRepository attendanceEventRepository;
     private final EntityManager entityManager;
     private final ObjectMapper objectMapper;
-    private final Clock clock = Clock.systemUTC();
+    private final Clock clock;
 
     public AttendanceAdminService(
             AttendanceSessionRepository attendanceSessionRepository,
             SessionAttendanceRepository sessionAttendanceRepository,
             AttendanceEventRepository attendanceEventRepository,
             EntityManager entityManager,
-            ObjectMapper objectMapper
+            ObjectMapper objectMapper,
+            Clock clock
     ) {
         this.attendanceSessionRepository = attendanceSessionRepository;
         this.sessionAttendanceRepository = sessionAttendanceRepository;
         this.attendanceEventRepository = attendanceEventRepository;
         this.entityManager = entityManager;
         this.objectMapper = objectMapper;
+        this.clock = clock;
     }
 
     @Transactional
@@ -340,11 +342,15 @@ public class AttendanceAdminService {
     }
 
     private void putIfNotNull(ObjectNode node, String key, Instant value) {
-        if (value != null) node.put(key, value.toString());
+        if (value != null) {
+            node.put(key, value.toString());
+        }
     }
 
     private void putIfNotNull(ObjectNode node, String key, String value) {
-        if (value != null && !value.isBlank()) node.put(key, value);
+        if (value != null && !value.isBlank()) {
+            node.put(key, value);
+        }
     }
 
     public record ReopenCheckinResult(
