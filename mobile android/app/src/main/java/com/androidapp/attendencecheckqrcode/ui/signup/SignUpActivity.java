@@ -5,11 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
 import android.text.TextUtils;
-import android.text.method.HideReturnsTransformationMethod;
-import android.text.method.PasswordTransformationMethod;
-import android.view.View;
 import android.widget.Button;
-import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -18,13 +14,15 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.androidapp.attendencecheckqrcode.R;
-import com.androidapp.attendencecheckqrcode.models.User;
+import com.androidapp.attendencecheckqrcode.api.ApiClient;
+import com.androidapp.attendencecheckqrcode.models.AuthResponse;
+import com.androidapp.attendencecheckqrcode.models.RegisterRequest;
 import com.androidapp.attendencecheckqrcode.ui.login.LoginActivity;
-import com.androidapp.attendencecheckqrcode.utils.MockData;
 
 import java.util.Calendar;
-
-// [FUTURE API] import retrofit2.Call...
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class SignUpActivity extends AppCompatActivity {
 
@@ -33,16 +31,13 @@ public class SignUpActivity extends AppCompatActivity {
     private Button btnSignUp;
     private LinearLayout btnGoogle;
 
-    // Các trường nhập liệu
     private EditText etFirstName, etLastName, etEmail, etDob, etPhone, etPassword;
-
     private boolean isPasswordVisible = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_up);
-
         if (getSupportActionBar() != null) getSupportActionBar().hide();
 
         initViews();
@@ -52,15 +47,12 @@ public class SignUpActivity extends AppCompatActivity {
     private void initViews() {
         btnBack = findViewById(R.id.btnBack);
         tvLoginLink = findViewById(R.id.tvLoginLink);
-
-        // Ánh xạ View (Đảm bảo file XML đã có các ID này)
         etFirstName = findViewById(R.id.etFirstName);
         etLastName = findViewById(R.id.etLastName);
         etEmail = findViewById(R.id.etEmail);
-        etPhone = findViewById(R.id.etPhone); // Cần thêm EditText này vào XML
+        etPhone = findViewById(R.id.etPhone);
         etDob = findViewById(R.id.etDob);
         etPassword = findViewById(R.id.etPassword);
-
         btnShowPass = findViewById(R.id.btnShowPass);
         btnSignUp = findViewById(R.id.btnSignUp);
         btnGoogle = findViewById(R.id.btnGoogle);
@@ -71,18 +63,16 @@ public class SignUpActivity extends AppCompatActivity {
         tvLoginLink.setOnClickListener(v -> finish());
         etDob.setOnClickListener(v -> showDatePicker());
 
-        // Ẩn/Hiện mật khẩu
         btnShowPass.setOnClickListener(v -> {
             if (isPasswordVisible) {
                 etPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
             } else {
-                etPassword.setInputType(InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+                etPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
             }
             etPassword.setSelection(etPassword.getText().length());
             isPasswordVisible = !isPasswordVisible;
         });
 
-        // Xử lý Đăng ký
         btnSignUp.setOnClickListener(v -> handleSignUp());
     }
 
@@ -94,7 +84,6 @@ public class SignUpActivity extends AppCompatActivity {
         String dob = etDob.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
 
-        // 1. Validation (Kiểm tra dữ liệu)
         if (TextUtils.isEmpty(firstName) || TextUtils.isEmpty(lastName) ||
                 TextUtils.isEmpty(email) || TextUtils.isEmpty(password) ||
                 TextUtils.isEmpty(phone)) {
@@ -102,42 +91,45 @@ public class SignUpActivity extends AppCompatActivity {
             return;
         }
 
-        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            Toast.makeText(this, "Email không hợp lệ!", Toast.LENGTH_SHORT).show();
-            return;
-        }
+        btnSignUp.setEnabled(false);
+        btnSignUp.setText("Đang xử lý...");
 
-        // 2. [MOCK] Lưu vào file .txt
-        User newUser = new User(email, password, firstName, lastName, dob, phone);
-        MockData.saveUserToTextFile(this, newUser);
+        RegisterRequest request = new RegisterRequest(firstName, lastName, email, phone, dob, password);
 
-        Toast.makeText(this, "Đăng ký thành công! Đã lưu vào máy.", Toast.LENGTH_LONG).show();
+        ApiClient.getApiService(this).registerUser(request).enqueue(new Callback<AuthResponse>() {
+            @Override
+            public void onResponse(Call<AuthResponse> call, Response<AuthResponse> response) {
+                btnSignUp.setEnabled(true);
+                btnSignUp.setText("Đăng ký");
 
-        // 3. [FUTURE API] Vị trí gọi API sau này
-        /*
-        ApiService api = ApiClient.getClient().create(ApiService.class);
-        RegisterRequest req = new RegisterRequest(email, password, firstName, lastName...);
-        api.register(req).enqueue(new Callback<User>() { ... });
-        */
+                if (response.isSuccessful() && response.body() != null) {
+                    if (response.body().isSuccess()) {
+                        Toast.makeText(SignUpActivity.this, "Đăng ký thành công!", Toast.LENGTH_LONG).show();
+                        Intent intent = new Intent(SignUpActivity.this, LoginActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                        finish();
+                    } else {
+                        Toast.makeText(SignUpActivity.this, response.body().getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                } else {
+                    Toast.makeText(SignUpActivity.this, "Lỗi từ máy chủ!", Toast.LENGTH_SHORT).show();
+                }
+            }
 
-        // Chuyển về trang Login và xóa các màn hình trước đó
-        Intent intent = new Intent(SignUpActivity.this, LoginActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(intent);
-        finish();
+            @Override
+            public void onFailure(Call<AuthResponse> call, Throwable t) {
+                btnSignUp.setEnabled(true);
+                btnSignUp.setText("Đăng ký");
+                Toast.makeText(SignUpActivity.this, "Lỗi mạng: " + t.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private void showDatePicker() {
         final Calendar calendar = Calendar.getInstance();
-        int year = calendar.get(Calendar.YEAR);
-        int month = calendar.get(Calendar.MONTH);
-        int day = calendar.get(Calendar.DAY_OF_MONTH);
-
-        DatePickerDialog datePickerDialog = new DatePickerDialog(this,
-                (view, year1, month1, dayOfMonth) -> {
-                    String selectedDate = dayOfMonth + "/" + (month1 + 1) + "/" + year1;
-                    etDob.setText(selectedDate);
-                }, year, month, day);
-        datePickerDialog.show();
+        new DatePickerDialog(this, (view, y, m, d) -> {
+            etDob.setText(d + "/" + (m + 1) + "/" + y);
+        }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show();
     }
 }
