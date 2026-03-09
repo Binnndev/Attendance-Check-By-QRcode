@@ -1,0 +1,45 @@
+# version: '3.8'
+
+services:
+  # Container cho Database MySQL
+  mysql-db:
+    image: mysql:8.0
+    container_name: qr_attendance_db
+    environment:
+      MYSQL_DATABASE: qr_attendance_dev
+      MYSQL_ROOT_PASSWORD: 123456
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+    # Thêm đoạn healthcheck này
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Container cho Spring Boot Backend
+  backend-app:
+    build: 
+      context: "./backend springboot"    
+      dockerfile: Dockerfile
+    container_name: qr_attendance_backend
+    ports:
+      # Map port 8081 của máy Fedora vào port 8081 của container
+      - "8081:8081"
+    depends_on:
+      - mysql-db
+    environment:
+      # Ép Spring Boot chạy ở port 8081
+      - SERVER_PORT=8081
+      
+      # Thay 'localhost' thành 'mysql-db' (tên service ở trên)
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/qr_attendance_dev?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&useUnicode=true&characterEncoding=UTF-8&connectionCollation=utf8mb4_unicode_ci
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=123456
+
+volumes:
+  # Lưu trữ dữ liệu MySQL thật trên máy để không bị mất khi tắt Docker
+  db_data:
