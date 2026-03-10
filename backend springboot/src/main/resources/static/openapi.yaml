@@ -998,7 +998,7 @@ components:
           maxLength: 190
         password:
           type: string
-          minLength: 6
+          minLength: 8
           maxLength: 200
       required: [email, password]
 

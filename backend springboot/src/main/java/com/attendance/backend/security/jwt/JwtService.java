@@ -1,5 +1,7 @@
 package com.attendance.backend.security.jwt;
 
+import com.attendance.backend.domain.entity.User;
+import com.attendance.backend.domain.enums.PlatformRole;
 import com.attendance.backend.security.JwtUserPrincipal;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
@@ -24,24 +26,26 @@ public class JwtService {
         this.properties = properties;
     }
 
+    public AccessTokenResult issueAccessToken(User user) {
+        if (user == null || user.getId() == null) {
+            throw new IllegalArgumentException("user and user.id must not be null");
+        }
+
+        PlatformRole platformRole = (user.getPlatformRole() != null)
+                ? user.getPlatformRole()
+                : PlatformRole.USER;
+
+        Instant now = Instant.now(clock);
+        Instant exp = accessTokenExpiresAt(now);
+        String accessToken = generateAccessToken(user.getId(), List.of(platformRole.name()), now, exp);
+
+        return new AccessTokenResult(accessToken, exp);
+    }
+
     public String generateAccessToken(UUID userId, Collection<String> roles) {
         Instant now = Instant.now(clock);
         Instant exp = accessTokenExpiresAt(now);
-
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("uid", userId.toString());
-        claims.put("roles", roles == null ? List.of() : new ArrayList<>(roles));
-
-        String primaryRole = (roles == null || roles.isEmpty()) ? null : roles.iterator().next();
-        claims.put("role", primaryRole);
-
-        return Jwts.builder()
-                .issuer(properties.getIssuer())
-                .issuedAt(Date.from(now))
-                .expiration(Date.from(exp))
-                .claims(claims)
-                .signWith(signingKey())
-                .compact();
+        return generateAccessToken(userId, roles, now, exp);
     }
 
     public String generateAccessToken(UUID userId, String role) {
@@ -69,10 +73,16 @@ public class JwtService {
         List<String> roles = new ArrayList<>();
         Object rawRoles = c.get("roles");
         if (rawRoles instanceof Collection<?> col) {
-            for (Object o : col) if (o != null) roles.add(o.toString());
+            for (Object o : col) {
+                if (o != null) {
+                    roles.add(o.toString());
+                }
+            }
         } else {
             String role = c.get("role", String.class);
-            if (role != null) roles.add(role);
+            if (role != null) {
+                roles.add(role);
+            }
         }
 
         return new ParsedJwt(uid, roles);
@@ -84,6 +94,23 @@ public class JwtService {
         return new JwtUserPrincipal(parsed.userId(), role, parsed.roles());
     }
 
+    private String generateAccessToken(UUID userId, Collection<String> roles, Instant now, Instant exp) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("uid", userId.toString());
+        claims.put("roles", roles == null ? List.of() : new ArrayList<>(roles));
+
+        String primaryRole = (roles == null || roles.isEmpty()) ? null : roles.iterator().next();
+        claims.put("role", primaryRole);
+
+        return Jwts.builder()
+                .issuer(properties.getIssuer())
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(exp))
+                .claims(claims)
+                .signWith(signingKey())
+                .compact();
+    }
+
     private SecretKey signingKey() {
         byte[] keyBytes = decodeSecret(properties.getSecret());
         if (keyBytes.length < 32) {
@@ -93,7 +120,9 @@ public class JwtService {
     }
 
     private byte[] decodeSecret(String secret) {
-        if (secret == null) return new byte[0];
+        if (secret == null) {
+            return new byte[0];
+        }
         try {
             return Base64.getDecoder().decode(secret);
         } catch (IllegalArgumentException ignore) {
@@ -102,4 +131,9 @@ public class JwtService {
     }
 
     public record ParsedJwt(UUID userId, List<String> roles) {}
+
+    public record AccessTokenResult(
+            String accessToken,
+            Instant expiresAt
+    ) {}
 }
