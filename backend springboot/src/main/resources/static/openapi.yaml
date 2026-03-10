@@ -42,6 +42,43 @@ paths:
         "401":
           $ref: "#/components/responses/Err401"
 
+  /me:
+    get:
+      tags: [ Me ]
+      summary: Get current user profile
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeResponse"
+        "401":
+          $ref: "#/components/responses/Err401"
+
+  /auth/register:
+    post:
+      tags: [ Auth ]
+      security: [ ]
+      summary: Register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegisterResponse"
+        "400":
+          $ref: "#/components/responses/Err400"
+        "409":
+          $ref: "#/components/responses/Err409"
+
   /groups:
     post:
       tags: [Groups]
@@ -997,6 +1034,46 @@ components:
         user:
           $ref: "#/components/schemas/LoginUserSummary"
       required: [ tokenType, accessToken, accessTokenExpiresAt, user ]
+
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 190
+        password:
+          type: string
+          minLength: 8
+          maxLength: 200
+        fullName:
+          type: string
+          minLength: 2
+          maxLength: 120
+        userCode:
+          type: string
+          maxLength: 40
+        deviceId:
+          type: string
+          maxLength: 120
+      required: [ email, password, fullName ]
+
+    RegisterResponse:
+        type: object
+        properties:
+          tokenType:
+            type: string
+            example: Bearer
+          accessToken:
+            type: string
+          accessTokenExpiresAt:
+            type: string
+            format: date-time
+          user:
+            $ref: "#/components/schemas/LoginUserSummary"
+          firstLogin:
+            type: boolean
+        required: [ tokenType, accessToken, accessTokenExpiresAt, user, firstLogin ]
 
     MeResponse:
       type: object
