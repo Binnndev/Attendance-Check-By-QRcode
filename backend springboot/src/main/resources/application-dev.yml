@@ -43,9 +43,10 @@ springdoc:
 
 app:
   jwt:
-    issuer: "attendance-dev"
-    secret: "dev-secret-please-change-32bytes-minimum-123456"
-    access-token-minutes: 60
+    issuer: "attendance-api-dev"
+    secret: "CHANGE_ME_DEV_32_CHARS_MINIMUM_SECRET"
+    accessTokenMinutes: 60
+    refreshTokenDays: 30
 
 management:
   endpoints:

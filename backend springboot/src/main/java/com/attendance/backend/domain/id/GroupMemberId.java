@@ -12,34 +12,44 @@ import java.util.UUID;
 @Embeddable
 public class GroupMemberId implements Serializable {
 
-    private static final long serialVersionUID = 1L;
-
-    @Column(name = "group_id", columnDefinition = "BINARY(16)", nullable = false)
+    @Column(name = "group_id", nullable = false, columnDefinition = "BINARY(16)")
     @Convert(converter = UuidBinary16SwapConverter.class)
     private UUID groupId;
 
-    @Column(name = "user_id", columnDefinition = "BINARY(16)", nullable = false)
+    @Column(name = "user_id", nullable = false, columnDefinition = "BINARY(16)")
     @Convert(converter = UuidBinary16SwapConverter.class)
     private UUID userId;
 
-    public GroupMemberId() {}
+    public GroupMemberId() {
+    }
 
     public GroupMemberId(UUID groupId, UUID userId) {
         this.groupId = groupId;
         this.userId = userId;
     }
 
-    public UUID getGroupId() { return groupId; }
-    public UUID getUserId() { return userId; }
+    public UUID getGroupId() {
+        return groupId;
+    }
 
-    public void setGroupId(UUID groupId) { this.groupId = groupId; }
-    public void setUserId(UUID userId) { this.userId = userId; }
+    public void setGroupId(UUID groupId) {
+        this.groupId = groupId;
+    }
+
+    public UUID getUserId() {
+        return userId;
+    }
+
+    public void setUserId(UUID userId) {
+        this.userId = userId;
+    }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof GroupMemberId that)) return false;
-        return Objects.equals(groupId, that.groupId) && Objects.equals(userId, that.userId);
+        return Objects.equals(groupId, that.groupId)
+                && Objects.equals(userId, that.userId);
     }
 
     @Override

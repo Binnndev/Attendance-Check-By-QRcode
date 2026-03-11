@@ -181,7 +181,7 @@ paths:
 
   /groups/join:
     post:
-      tags: [Members]
+      tags: [ Members ]
       summary: Join group by joinCode
       requestBody:
         required: true
@@ -196,14 +196,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MemberResponse"
-        "404":
-          $ref: "#/components/responses/Err404"
         "400":
           $ref: "#/components/responses/Err400"
+        "401":
+          $ref: "#/components/responses/Err401"
+        "404":
+          $ref: "#/components/responses/Err404"
+        "409":
+          $ref: "#/components/responses/Err409"
 
   /groups/{groupId}/members:
     get:
-      tags: [Members]
+      tags: [ Members ]
       summary: List members (OWNER/CO_HOST)
       parameters:
         - $ref: "#/components/parameters/GroupId"
@@ -216,12 +220,16 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PageMemberResponse"
+        "401":
+          $ref: "#/components/responses/Err401"
         "403":
           $ref: "#/components/responses/Err403"
+        "404":
+          $ref: "#/components/responses/Err404"
 
   /groups/{groupId}/members/{userId}:
     patch:
-      tags: [Members]
+      tags: [ Members ]
       summary: Member action (approve/reject/remove/promote/demote/transfer ownership)
       parameters:
         - $ref: "#/components/parameters/GroupId"
@@ -239,26 +247,36 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MemberResponse"
-        "422":
-          $ref: "#/components/responses/Err422"
-        "409":
-          $ref: "#/components/responses/Err409"
+        "400":
+          $ref: "#/components/responses/Err400"
+        "401":
+          $ref: "#/components/responses/Err401"
         "403":
           $ref: "#/components/responses/Err403"
+        "404":
+          $ref: "#/components/responses/Err404"
+        "409":
+          $ref: "#/components/responses/Err409"
+        "422":
+          $ref: "#/components/responses/Err422"
 
   /groups/{groupId}/members/me:
     delete:
-      tags: [Members]
-      summary: Leave group (MEMBER/CO_HOST). OWNER cannot leave.
+      tags: [ Members ]
+      summary: Leave group (MEMBER/CO_HOST)
       parameters:
         - $ref: "#/components/parameters/GroupId"
       responses:
         "204":
           description: No Content
+        "401":
+          $ref: "#/components/responses/Err401"
+        "404":
+          $ref: "#/components/responses/Err404"
         "409":
           $ref: "#/components/responses/Err409"
-        "403":
-          $ref: "#/components/responses/Err403"
+        "422":
+          $ref: "#/components/responses/Err422"
 
   /groups/{groupId}/sessions:
     post:
@@ -1222,14 +1240,11 @@ components:
       properties:
         action:
           type: string
-          enum: [APPROVE, REJECT, REMOVE, PROMOTE, DEMOTE, TRANSFER_OWNERSHIP]
-        targetRole:
-          type: string
-          enum: [OWNER, CO_HOST, MEMBER]
+          enum: [ APPROVE, REJECT, REMOVE, PROMOTE, DEMOTE, TRANSFER_OWNERSHIP ]
         note:
           type: string
           maxLength: 500
-      required: [action]
+      required: [ action ]
 
     MemberResponse:
       type: object
@@ -1247,9 +1262,11 @@ components:
         joinedAt:
           type: string
           format: date-time
+          nullable: true
         invitedBy:
           type: string
           format: uuid
+          nullable: true
         createdAt:
           type: string
           format: date-time
@@ -1259,7 +1276,18 @@ components:
         removedAt:
           type: string
           format: date-time
-      required: [groupId, userId, role, memberStatus, createdAt, updatedAt]
+          nullable: true
+        email:
+          type: string
+          format: email
+          nullable: true
+        fullName:
+          type: string
+          nullable: true
+        avatarUrl:
+          type: string
+          nullable: true
+      required: [ groupId, userId, role, memberStatus, createdAt, updatedAt ]
 
     CreateSessionRequest:
       type: object

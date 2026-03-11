@@ -32,7 +32,6 @@ logging:
     org.flywaydb: INFO
 
 app:
-  security:
     jwt:
       issuer: "attendance-api-dev"
       secret: "CHANGE_ME_DEV_32_CHARS_MINIMUM_SECRET"

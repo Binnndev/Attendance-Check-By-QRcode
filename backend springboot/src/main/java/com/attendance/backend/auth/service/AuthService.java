@@ -69,69 +69,80 @@ public class AuthService {
 
     @Transactional
     public RegisterResponse register(RegisterRequest req) {
-        String emailNorm = normalizeEmail(req.email());
-        String fullName = normalizeText(req.fullName());
-        String userCode = normalizeNullable(req.userCode());
-        String deviceId = normalizeNullable(req.deviceId());
-
-        if (!StringUtils.hasText(emailNorm)) {
-            throw ApiException.badRequest("EMAIL_REQUIRED", "email is required");
-        }
-
-        if (!StringUtils.hasText(req.password())) {
-            throw ApiException.badRequest("PASSWORD_REQUIRED", "password is required");
-        }
-
-        if (req.password().length() < 8) {
-            throw ApiException.badRequest("PASSWORD_TOO_SHORT", "password must be at least 8 characters");
-        }
-
-        if (!StringUtils.hasText(fullName) || fullName.length() < 2) {
-            throw ApiException.badRequest("FULL_NAME_INVALID", "fullName must be at least 2 characters");
-        }
-
-        if (userRepository.existsByEmailNorm(emailNorm)) {
-            throw ApiException.conflict("EMAIL_ALREADY_EXISTS", "Email already exists");
-        }
-
-        if (StringUtils.hasText(userCode) && userRepository.existsByUserCode(userCode)) {
-            throw ApiException.conflict("USER_CODE_ALREADY_EXISTS", "User code already exists");
-        }
-
-        User user = new User();
-        user.setId(UUID.randomUUID());
-        user.setEmail(emailNorm);
-        user.setPasswordHash(passwordEncoder.encode(req.password()));
-        user.setFullName(fullName);
-        user.setUserCode(userCode);
-        user.setPrimaryDeviceId(deviceId);
-        user.setPlatformRole(PlatformRole.USER);
-        user.setStatus(UserStatus.ACTIVE);
-
         try {
+            System.out.println("S1 - enter register");
+            System.out.println("S2 - raw email = " + req.email());
+
+            String emailNorm = normalizeEmail(req.email());
+            String fullName = normalizeText(req.fullName());
+            String userCode = normalizeNullable(req.userCode());
+            String deviceId = normalizeNullable(req.deviceId());
+
+            System.out.println("S3 - normalized email = " + emailNorm);
+            System.out.println("S4 - before validations");
+
+            if (!StringUtils.hasText(emailNorm)) {
+                throw ApiException.badRequest("EMAIL_REQUIRED", "email is required");
+            }
+
+            if (!StringUtils.hasText(req.password())) {
+                throw ApiException.badRequest("PASSWORD_REQUIRED", "password is required");
+            }
+
+            if (req.password().length() < 8) {
+                throw ApiException.badRequest("PASSWORD_TOO_SHORT", "password must be at least 8 characters");
+            }
+
+            if (!StringUtils.hasText(fullName) || fullName.length() < 2) {
+                throw ApiException.badRequest("FULL_NAME_INVALID", "fullName must be at least 2 characters");
+            }
+
+            System.out.println("S5 - before existsByEmailNorm");
+            if (userRepository.existsByEmailNorm(emailNorm)) {
+                throw ApiException.conflict("EMAIL_ALREADY_EXISTS", "Email already exists");
+            }
+
+            System.out.println("S6 - before existsByUserCode");
+            if (StringUtils.hasText(userCode) && userRepository.existsByUserCode(userCode)) {
+                throw ApiException.conflict("USER_CODE_ALREADY_EXISTS", "User code already exists");
+            }
+
+            System.out.println("S7 - before build user");
+            User user = new User();
+            user.setId(UUID.randomUUID());
+
+            System.out.println("S8 - before password encode");
+            user.setEmail(emailNorm);
+            user.setPasswordHash(passwordEncoder.encode(req.password()));
+            user.setFullName(fullName);
+            user.setUserCode(userCode);
+            user.setPrimaryDeviceId(deviceId);
+            user.setPlatformRole(PlatformRole.USER);
+            user.setStatus(UserStatus.ACTIVE);
+
+            System.out.println("S9 - before save");
             userRepository.saveAndFlush(user);
+            System.out.println("S10 - after save userId=" + user.getId());
+
+            return new RegisterResponse(
+                    "Bearer",
+                    "TEMP_TOKEN",
+                    java.time.Instant.now().plusSeconds(3600),
+                    new RegisterResponse.UserSummary(
+                            user.getId(),
+                            user.getEmail(),
+                            user.getFullName(),
+                            user.getPlatformRole().name()
+                    ),
+                    true
+            );
         } catch (DataIntegrityViolationException ex) {
+            ex.printStackTrace();
             throw mapRegisterConflict(ex);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            throw ex;
         }
-
-        PlatformRole platformRole = (user.getPlatformRole() != null)
-                ? user.getPlatformRole()
-                : PlatformRole.USER;
-
-        JwtService.AccessTokenResult token = jwtService.issueAccessToken(user);
-
-        return new RegisterResponse(
-                "Bearer",
-                token.accessToken(),
-                token.expiresAt(),
-                new RegisterResponse.UserSummary(
-                        user.getId(),
-                        user.getEmail(),
-                        user.getFullName(),
-                        platformRole.name()
-                ),
-                true
-        );
     }
 
     private ApiException mapRegisterConflict(DataIntegrityViolationException ex) {

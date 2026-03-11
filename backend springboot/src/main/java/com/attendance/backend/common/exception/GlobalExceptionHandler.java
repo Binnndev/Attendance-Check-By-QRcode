@@ -4,6 +4,8 @@ import com.attendance.backend.common.db.DbErrorTranslator;
 import com.attendance.backend.common.web.RequestIdFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -22,6 +24,8 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     private final DbErrorTranslator dbErrorTranslator;
 
     public GlobalExceptionHandler(DbErrorTranslator dbErrorTranslator) {
@@ -30,7 +34,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<?> handleApi(ApiException ex, HttpServletRequest req) {
-        return ResponseEntity.status(ex.getStatus()).body(baseBody(ex.getStatus().value(), ex.getCode(), ex.getMessage(), req));
+        return ResponseEntity.status(ex.getStatus())
+                .body(baseBody(ex.getStatus().value(), ex.getCode(), ex.getMessage(), req));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -67,13 +72,26 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({DataIntegrityViolationException.class, DataAccessException.class})
     public ResponseEntity<?> handleDb(Exception ex, HttpServletRequest req) {
+        log.error("Database error on {} {}", req.getMethod(), req.getRequestURI(), ex);
         ApiException api = dbErrorTranslator.translate(ex);
-        return ResponseEntity.status(api.getStatus()).body(baseBody(api.getStatus().value(), api.getCode(), api.getMessage(), req));
+        return ResponseEntity.status(api.getStatus())
+                .body(baseBody(api.getStatus().value(), api.getCode(), api.getMessage(), req));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleUnexpected(Exception ex, HttpServletRequest req) {
-        return ResponseEntity.status(500).body(baseBody(500, "INTERNAL_ERROR", "Unexpected error", req));
+        log.error("Unexpected error on {} {}", req.getMethod(), req.getRequestURI(), ex);
+        return ResponseEntity.status(500)
+                .body(baseBody(500, "INTERNAL_ERROR", "Unexpected error", req));
+    }
+
+    @ExceptionHandler(org.springframework.web.HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<?> handleUnsupportedMediaType(
+            org.springframework.web.HttpMediaTypeNotSupportedException ex,
+            HttpServletRequest req
+    ) {
+        return ResponseEntity.status(415)
+                .body(baseBody(415, "UNSUPPORTED_MEDIA_TYPE", "Content-Type must be application/json", req));
     }
 
     private Map<String, Object> baseBody(int status, String code, String message, HttpServletRequest req) {
