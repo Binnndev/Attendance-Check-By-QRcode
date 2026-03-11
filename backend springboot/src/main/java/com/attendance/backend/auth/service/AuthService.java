@@ -1,8 +1,10 @@
 package com.attendance.backend.auth.service;
 
 import com.attendance.backend.auth.dto.AuthDtos;
+import com.attendance.backend.auth.dto.ChangePasswordRequest;
 import com.attendance.backend.auth.dto.RegisterRequest;
 import com.attendance.backend.auth.dto.RegisterResponse;
+import com.attendance.backend.auth.dto.UpdateMeRequest;
 import com.attendance.backend.auth.repository.UserRepository;
 import com.attendance.backend.common.exception.ApiException;
 import com.attendance.backend.domain.entity.User;
@@ -15,7 +17,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.time.Instant;
 import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -70,16 +74,10 @@ public class AuthService {
     @Transactional
     public RegisterResponse register(RegisterRequest req) {
         try {
-            System.out.println("S1 - enter register");
-            System.out.println("S2 - raw email = " + req.email());
-
             String emailNorm = normalizeEmail(req.email());
             String fullName = normalizeText(req.fullName());
             String userCode = normalizeNullable(req.userCode());
             String deviceId = normalizeNullable(req.deviceId());
-
-            System.out.println("S3 - normalized email = " + emailNorm);
-            System.out.println("S4 - before validations");
 
             if (!StringUtils.hasText(emailNorm)) {
                 throw ApiException.badRequest("EMAIL_REQUIRED", "email is required");
@@ -97,21 +95,16 @@ public class AuthService {
                 throw ApiException.badRequest("FULL_NAME_INVALID", "fullName must be at least 2 characters");
             }
 
-            System.out.println("S5 - before existsByEmailNorm");
             if (userRepository.existsByEmailNorm(emailNorm)) {
                 throw ApiException.conflict("EMAIL_ALREADY_EXISTS", "Email already exists");
             }
 
-            System.out.println("S6 - before existsByUserCode");
             if (StringUtils.hasText(userCode) && userRepository.existsByUserCode(userCode)) {
                 throw ApiException.conflict("USER_CODE_ALREADY_EXISTS", "User code already exists");
             }
 
-            System.out.println("S7 - before build user");
             User user = new User();
             user.setId(UUID.randomUUID());
-
-            System.out.println("S8 - before password encode");
             user.setEmail(emailNorm);
             user.setPasswordHash(passwordEncoder.encode(req.password()));
             user.setFullName(fullName);
@@ -120,14 +113,12 @@ public class AuthService {
             user.setPlatformRole(PlatformRole.USER);
             user.setStatus(UserStatus.ACTIVE);
 
-            System.out.println("S9 - before save");
             userRepository.saveAndFlush(user);
-            System.out.println("S10 - after save userId=" + user.getId());
 
             return new RegisterResponse(
                     "Bearer",
                     "TEMP_TOKEN",
-                    java.time.Instant.now().plusSeconds(3600),
+                    Instant.now().plusSeconds(3600),
                     new RegisterResponse.UserSummary(
                             user.getId(),
                             user.getEmail(),
@@ -137,12 +128,90 @@ public class AuthService {
                     true
             );
         } catch (DataIntegrityViolationException ex) {
-            ex.printStackTrace();
             throw mapRegisterConflict(ex);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            throw ex;
         }
+    }
+
+    @Transactional(readOnly = true)
+    public User getCurrentUser(UUID userId) {
+        return getCurrentActiveUserOrThrow(userId);
+    }
+
+    @Transactional
+    public User updateMe(UUID userId, UpdateMeRequest req) {
+        rejectUnknownFields(req.getUnknownFields());
+
+        User user = getCurrentActiveUserOrThrow(userId);
+
+        boolean changed = false;
+
+        if (req.getFullName() != null) {
+            String fullName = normalizeText(req.getFullName());
+            if (!StringUtils.hasText(fullName) || fullName.length() < 2 || fullName.length() > 120) {
+                throw ApiException.badRequest("FULL_NAME_INVALID", "fullName must be between 2 and 120 characters");
+            }
+            user.setFullName(fullName);
+            changed = true;
+        }
+
+        if (req.getAvatarUrl() != null) {
+            String avatarUrl = normalizeNullable(req.getAvatarUrl());
+            if (avatarUrl != null && avatarUrl.length() > 500) {
+                throw ApiException.badRequest("AVATAR_URL_TOO_LONG", "avatarUrl must be at most 500 characters");
+            }
+            user.setAvatarUrl(avatarUrl);
+            changed = true;
+        }
+
+        if (!changed) {
+            throw ApiException.badRequest("NO_FIELDS_TO_UPDATE", "At least one updatable field is required");
+        }
+
+        return userRepository.save(user);
+    }
+
+    @Transactional
+    public void changePassword(UUID userId, ChangePasswordRequest req) {
+        rejectUnknownFields(req.getUnknownFields());
+
+        User user = getCurrentActiveUserOrThrow(userId);
+
+        if (!passwordEncoder.matches(req.getCurrentPassword(), user.getPasswordHash())) {
+            throw ApiException.unprocessable("CURRENT_PASSWORD_INCORRECT", "Current password is incorrect");
+        }
+
+        if (req.getCurrentPassword().equals(req.getNewPassword())) {
+            throw ApiException.unprocessable("NEW_PASSWORD_MUST_BE_DIFFERENT", "New password must be different from current password");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(req.getNewPassword()));
+        userRepository.save(user);
+    }
+
+    private User getCurrentActiveUserOrThrow(UUID userId) {
+        if (userId == null) {
+            throw ApiException.unauthorized("UNAUTHORIZED", "Missing JWT principal");
+        }
+
+        User user = userRepository.findByIdAndDeletedAtIsNull(userId)
+                .orElseThrow(() -> ApiException.notFound("USER_NOT_FOUND", "User not found"));
+
+        if (user.getStatus() != UserStatus.ACTIVE) {
+            throw ApiException.unauthorized("USER_DISABLED", "User is not active");
+        }
+
+        return user;
+    }
+
+    private void rejectUnknownFields(Set<String> unknownFields) {
+        if (unknownFields == null || unknownFields.isEmpty()) {
+            return;
+        }
+
+        throw ApiException.badRequest(
+                "INVALID_REQUEST_BODY",
+                "Unknown field(s): " + String.join(", ", unknownFields)
+        );
     }
 
     private ApiException mapRegisterConflict(DataIntegrityViolationException ex) {

@@ -1,13 +1,13 @@
 package com.attendance.backend.auth.api;
 
-import com.attendance.backend.auth.repository.UserRepository;
+import com.attendance.backend.auth.dto.UpdateMeRequest;
+import com.attendance.backend.auth.service.AuthService;
 import com.attendance.backend.common.exception.ApiException;
 import com.attendance.backend.domain.entity.User;
 import com.attendance.backend.security.UserPrincipal;
+import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
@@ -15,29 +15,41 @@ import java.util.UUID;
 @RequestMapping("/api/v1")
 public class MeController {
 
-    private final UserRepository userRepository;
+    private final AuthService authService;
 
-    public MeController(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public MeController(AuthService authService) {
+        this.authService = authService;
     }
 
     @GetMapping("/me")
     public MeResponse me(@AuthenticationPrincipal UserPrincipal principal) {
-        if (principal == null) {
+        UUID userId = requireUserId(principal);
+        User user = authService.getCurrentUser(userId);
+        return toResponse(user);
+    }
+
+    @PatchMapping("/me")
+    public MeResponse updateMe(@AuthenticationPrincipal UserPrincipal principal,
+                               @Valid @RequestBody UpdateMeRequest request) {
+        UUID userId = requireUserId(principal);
+        User user = authService.updateMe(userId, request);
+        return toResponse(user);
+    }
+
+    private UUID requireUserId(UserPrincipal principal) {
+        if (principal == null || principal.getUserId() == null) {
             throw ApiException.unauthorized("UNAUTHORIZED", "Missing JWT principal");
         }
+        return principal.getUserId();
+    }
 
-        UUID userId = principal.getUserId();
-
-        User u = userRepository.findById(userId)
-                .orElseThrow(() -> ApiException.notFound("USER_NOT_FOUND", "User not found"));
-
+    private MeResponse toResponse(User user) {
         return new MeResponse(
-                u.getId(),
-                u.getEmail(),
-                u.getFullName(),
-                u.getAvatarUrl(),
-                u.getPlatformRole().name()
+                user.getId(),
+                user.getEmail(),
+                user.getFullName(),
+                user.getAvatarUrl(),
+                user.getPlatformRole().name()
         );
     }
 
@@ -47,5 +59,6 @@ public class MeController {
             String fullName,
             String avatarUrl,
             String platformRole
-    ) {}
+    ) {
+    }
 }

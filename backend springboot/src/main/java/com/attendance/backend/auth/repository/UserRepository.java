@@ -41,4 +41,6 @@ public interface UserRepository extends JpaRepository<User, UUID> {
           and u.deletedAt is null
     """)
     Optional<User> findByEmailNorm(@Param("emailNorm") String emailNorm);
+
+    Optional<User> findByIdAndDeletedAtIsNull(UUID id);
 }

@@ -55,6 +55,53 @@ paths:
                 $ref: "#/components/schemas/MeResponse"
         "401":
           $ref: "#/components/responses/Err401"
+        "404":
+          $ref: "#/components/responses/Err404"
+
+    patch:
+      tags: [ Me ]
+      summary: Update current user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMeRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeResponse"
+        "400":
+          $ref: "#/components/responses/Err400"
+        "401":
+          $ref: "#/components/responses/Err401"
+        "404":
+          $ref: "#/components/responses/Err404"
+
+  /auth/change-password:
+    post:
+      tags: [ Auth ]
+      summary: Change current user password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordRequest"
+      responses:
+        "204":
+          description: No Content
+        "400":
+          $ref: "#/components/responses/Err400"
+        "401":
+          $ref: "#/components/responses/Err401"
+        "404":
+          $ref: "#/components/responses/Err404"
+        "422":
+          $ref: "#/components/responses/Err422"
 
   /auth/register:
     post:
@@ -937,6 +984,32 @@ components:
                 message: Rule violation
 
   schemas:
+    UpdateMeRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        fullName:
+          type: string
+          minLength: 2
+          maxLength: 120
+        avatarUrl:
+          type: string
+          maxLength: 500
+
+    ChangePasswordRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        currentPassword:
+          type: string
+          minLength: 8
+          maxLength: 200
+        newPassword:
+          type: string
+          minLength: 8
+          maxLength: 200
+      required: [ currentPassword, newPassword ]
+
     ApiError:
       type: object
       properties:
@@ -1113,20 +1186,6 @@ components:
         platformRole:
           $ref: "#/components/schemas/PlatformRole"
       required: [id, email, fullName, platformRole]
-
-    UpdateMeRequest:
-      type: object
-      properties:
-        fullName:
-          type: string
-          minLength: 2
-          maxLength: 120
-        avatarUrl:
-          type: string
-          maxLength: 500
-        primaryDeviceId:
-          type: string
-          maxLength: 120
 
     CreateGroupRequest:
       type: object
