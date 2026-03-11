@@ -94,6 +94,15 @@ public class GlobalExceptionHandler {
                 .body(baseBody(415, "UNSUPPORTED_MEDIA_TYPE", "Content-Type must be application/json", req));
     }
 
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    public ResponseEntity<?> handleNoResource(
+            org.springframework.web.servlet.resource.NoResourceFoundException ex,
+            HttpServletRequest req
+    ) {
+        return ResponseEntity.status(404)
+                .body(baseBody(404, "NOT_FOUND", "Endpoint not found", req));
+    }
+
     private Map<String, Object> baseBody(int status, String code, String message, HttpServletRequest req) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", Instant.now().toString());

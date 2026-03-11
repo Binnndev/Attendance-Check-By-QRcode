@@ -4,7 +4,15 @@ import com.attendance.backend.common.persistence.MysqlUuidBinary16SwapType;
 import com.attendance.backend.common.persistence.UuidBinary16SwapConverter;
 import com.attendance.backend.domain.enums.ApprovalMode;
 import com.attendance.backend.domain.enums.GroupStatus;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import org.hibernate.annotations.Type;
 
 import java.time.Instant;
@@ -18,8 +26,8 @@ import java.util.UUID;
                 @Index(name = "idx_groups_status_created", columnList = "status, created_at")
         },
         uniqueConstraints = {
-                @UniqueConstraint(name = "uk_groups_code", columnNames = "code"),
-                @UniqueConstraint(name = "uk_groups_join_code", columnNames = "join_code")
+                @UniqueConstraint(name = "uk_groups_code", columnNames = {"code"}),
+                @UniqueConstraint(name = "uk_groups_join_code", columnNames = {"join_code"})
         }
 )
 public class ClassGroup {
@@ -33,13 +41,13 @@ public class ClassGroup {
     @Convert(converter = UuidBinary16SwapConverter.class)
     private UUID ownerUserId;
 
-    @Column(name = "name", nullable = false, length = 150)
+    @Column(name = "name", length = 150, nullable = false)
     private String name;
 
-    @Column(name = "code", nullable = false, length = 20)
+    @Column(name = "code", length = 20, nullable = false)
     private String code;
 
-    @Column(name = "join_code", nullable = false, length = 16)
+    @Column(name = "join_code", length = 16, nullable = false)
     private String joinCode;
 
     @Column(name = "description", length = 1000)
@@ -71,54 +79,110 @@ public class ClassGroup {
     @Column(name = "deleted_at")
     private Instant deletedAt;
 
+    public ClassGroup() {
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public UUID getOwnerUserId() {
+        return ownerUserId;
+    }
+
+    public void setOwnerUserId(UUID ownerUserId) {
+        this.ownerUserId = ownerUserId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public String getJoinCode() {
+        return joinCode;
+    }
+
+    public void setJoinCode(String joinCode) {
+        this.joinCode = joinCode;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getSemester() {
+        return semester;
+    }
+
+    public void setSemester(String semester) {
+        this.semester = semester;
+    }
+
+    public String getRoom() {
+        return room;
+    }
+
+    public void setRoom(String room) {
+        this.room = room;
+    }
+
+    public ApprovalMode getApprovalMode() {
+        return approvalMode;
+    }
+
+    public void setApprovalMode(ApprovalMode approvalMode) {
+        this.approvalMode = approvalMode;
+    }
+
     public boolean isAllowAutoJoinOnCheckin() {
         return allowAutoJoinOnCheckin == 1;
     }
 
-    public void setAllowAutoJoinOnCheckin(boolean value) {
-        this.allowAutoJoinOnCheckin = (byte) (value ? 1 : 0);
+    public void setAllowAutoJoinOnCheckin(boolean allowAutoJoinOnCheckin) {
+        this.allowAutoJoinOnCheckin = (byte) (allowAutoJoinOnCheckin ? 1 : 0);
     }
 
-    public boolean isActive() {
-        return status == GroupStatus.ACTIVE && deletedAt == null;
+    public GroupStatus getStatus() {
+        return status;
     }
 
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
+    public void setStatus(GroupStatus status) {
+        this.status = status;
+    }
 
-    public UUID getOwnerUserId() { return ownerUserId; }
-    public void setOwnerUserId(UUID ownerUserId) { this.ownerUserId = ownerUserId; }
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
 
-    public String getCode() { return code; }
-    public void setCode(String code) { this.code = code; }
+    public Instant getDeletedAt() {
+        return deletedAt;
+    }
 
-    public String getJoinCode() { return joinCode; }
-    public void setJoinCode(String joinCode) { this.joinCode = joinCode; }
-
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-
-    public String getSemester() { return semester; }
-    public void setSemester(String semester) { this.semester = semester; }
-
-    public String getRoom() { return room; }
-    public void setRoom(String room) { this.room = room; }
-
-    public ApprovalMode getApprovalMode() { return approvalMode; }
-    public void setApprovalMode(ApprovalMode approvalMode) { this.approvalMode = approvalMode; }
-
-    public byte getAllowAutoJoinOnCheckin() { return allowAutoJoinOnCheckin; }
-    public void setAllowAutoJoinOnCheckin(byte allowAutoJoinOnCheckin) { this.allowAutoJoinOnCheckin = allowAutoJoinOnCheckin; }
-
-    public GroupStatus getStatus() { return status; }
-    public void setStatus(GroupStatus status) { this.status = status; }
-
-    public Instant getCreatedAt() { return createdAt; }
-    public Instant getUpdatedAt() { return updatedAt; }
-
-    public Instant getDeletedAt() { return deletedAt; }
-    public void setDeletedAt(Instant deletedAt) { this.deletedAt = deletedAt; }
+    public void setDeletedAt(Instant deletedAt) {
+        this.deletedAt = deletedAt;
+    }
 }
