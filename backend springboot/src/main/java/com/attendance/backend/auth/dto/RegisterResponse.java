@@ -7,6 +7,9 @@ public record RegisterResponse(
         String tokenType,
         String accessToken,
         Instant accessTokenExpiresAt,
+        String refreshToken,
+        Instant refreshTokenExpiresAt,
+        UUID sessionId,
         UserSummary user,
         boolean firstLogin
 ) {

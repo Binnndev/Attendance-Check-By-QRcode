@@ -33,9 +33,8 @@ springdoc:
     enabled: false
 
 app:
-  security:
-    jwt:
-      issuer: "attendance-api"
-      secret: ${JWT_SECRET:CHANGE_ME_PROD_32_CHARS_MINIMUM_SECRET}
-      accessTokenMinutes: 60
-      refreshTokenDays: 30
+  jwt:
+    issuer: "attendance-api"
+    secret: ${JWT_SECRET:CHANGE_ME_PROD_32_CHARS_MINIMUM_SECRET}
+    accessTokenMinutes: 15
+    refreshTokenDays: 30

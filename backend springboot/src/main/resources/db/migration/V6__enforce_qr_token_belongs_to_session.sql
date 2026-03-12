@@ -1,4 +1,3 @@
-
 SET @idx := (
     SELECT 1
     FROM information_schema.STATISTICS

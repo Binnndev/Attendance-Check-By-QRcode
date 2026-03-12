@@ -45,7 +45,7 @@ app:
   jwt:
     issuer: "attendance-api-dev"
     secret: "CHANGE_ME_DEV_32_CHARS_MINIMUM_SECRET"
-    accessTokenMinutes: 60
+    accessTokenMinutes: 15
     refreshTokenDays: 30
 
 management:

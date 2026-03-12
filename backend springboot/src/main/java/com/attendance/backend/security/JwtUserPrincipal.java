@@ -3,17 +3,22 @@ package com.attendance.backend.security;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class JwtUserPrincipal implements UserPrincipal {
 
     private final UUID userId;
+    private final UUID sessionId;
     private final String role;
     private final List<String> roles;
 
-    public JwtUserPrincipal(UUID userId, String role, List<String> roles) {
+    public JwtUserPrincipal(UUID userId, UUID sessionId, String role, List<String> roles) {
         this.userId = userId;
+        this.sessionId = sessionId;
         this.role = role;
         this.roles = roles == null ? List.of() : List.copyOf(roles);
     }
@@ -21,6 +26,11 @@ public class JwtUserPrincipal implements UserPrincipal {
     @Override
     public UUID getUserId() {
         return userId;
+    }
+
+    @Override
+    public UUID getSessionId() {
+        return sessionId;
     }
 
     @Override
@@ -33,7 +43,6 @@ public class JwtUserPrincipal implements UserPrincipal {
     }
 
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // ROLE_USER, ROLE_ADMIN...
         return roles.stream()
                 .filter(Objects::nonNull)
                 .map(String::trim)

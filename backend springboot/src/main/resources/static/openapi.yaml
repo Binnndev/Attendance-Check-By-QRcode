@@ -42,6 +42,58 @@ paths:
         "401":
           $ref: "#/components/responses/Err401"
 
+  /auth/refresh:
+    post:
+      tags: [ Auth ]
+      security: [ ]
+      summary: Refresh access and refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenResponse"
+        "400":
+          $ref: "#/components/responses/Err400"
+        "401":
+          $ref: "#/components/responses/Err401"
+
+  /auth/logout:
+      post:
+        tags: [ Auth ]
+        security: [ ]
+        summary: Logout current session
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogoutRequest"
+        responses:
+          "204":
+            description: No Content
+          "400":
+            $ref: "#/components/responses/Err400"
+
+  /auth/logout-all:
+      post:
+        tags: [ Auth ]
+        summary: Logout all active sessions
+        responses:
+          "204":
+            description: No Content
+          "401":
+            $ref: "#/components/responses/Err401"
+          "404":
+            $ref: "#/components/responses/Err404"
+
   /me:
     get:
       tags: [ Me ]
@@ -929,7 +981,7 @@ components:
               value:
                 status: 401
                 code: UNAUTHORIZED
-                message: Missing or invalid token
+                message: Missing/invalid token
 
     Err403:
       description: Forbidden
@@ -1082,6 +1134,7 @@ components:
 
     LoginRequest:
       type: object
+      additionalProperties: false
       properties:
         email:
           type: string
@@ -1091,7 +1144,26 @@ components:
           type: string
           minLength: 8
           maxLength: 200
-      required: [email, password]
+        deviceId:
+          type: string
+          maxLength: 120
+      required: [ email, password ]
+
+    RefreshRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        refreshToken:
+          type: string
+      required: [ refreshToken ]
+
+    LogoutRequest:
+        type: object
+        additionalProperties: false
+        properties:
+          refreshToken:
+            type: string
+        required: [ refreshToken ]
 
     LoginUserSummary:
       type: object
@@ -1122,9 +1194,24 @@ components:
         accessTokenExpiresAt:
           type: string
           format: date-time
+        refreshToken:
+          type: string
+        refreshTokenExpiresAt:
+          type: string
+          format: date-time
+        sessionId:
+          type: string
+          format: uuid
         user:
           $ref: "#/components/schemas/LoginUserSummary"
-      required: [ tokenType, accessToken, accessTokenExpiresAt, user ]
+      required:
+        - tokenType
+        - accessToken
+        - accessTokenExpiresAt
+        - refreshToken
+        - refreshTokenExpiresAt
+        - sessionId
+        - user
 
     RegisterRequest:
       type: object
@@ -1150,21 +1237,37 @@ components:
       required: [ email, password, fullName ]
 
     RegisterResponse:
-        type: object
-        properties:
-          tokenType:
-            type: string
-            example: Bearer
-          accessToken:
-            type: string
-          accessTokenExpiresAt:
-            type: string
-            format: date-time
-          user:
-            $ref: "#/components/schemas/LoginUserSummary"
-          firstLogin:
-            type: boolean
-        required: [ tokenType, accessToken, accessTokenExpiresAt, user, firstLogin ]
+      type: object
+      properties:
+        tokenType:
+          type: string
+          example: Bearer
+        accessToken:
+          type: string
+        accessTokenExpiresAt:
+          type: string
+          format: date-time
+        refreshToken:
+          type: string
+        refreshTokenExpiresAt:
+          type: string
+          format: date-time
+        sessionId:
+          type: string
+          format: uuid
+        user:
+          $ref: "#/components/schemas/LoginUserSummary"
+        firstLogin:
+          type: boolean
+      required:
+        - tokenType
+        - accessToken
+        - accessTokenExpiresAt
+        - refreshToken
+        - refreshTokenExpiresAt
+        - sessionId
+        - user
+        - firstLogin
 
     MeResponse:
       type: object

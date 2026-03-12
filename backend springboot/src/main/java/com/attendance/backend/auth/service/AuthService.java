@@ -6,8 +6,10 @@ import com.attendance.backend.auth.dto.RegisterRequest;
 import com.attendance.backend.auth.dto.RegisterResponse;
 import com.attendance.backend.auth.dto.UpdateMeRequest;
 import com.attendance.backend.auth.repository.UserRepository;
+import com.attendance.backend.auth.repository.UserSessionRepository;
 import com.attendance.backend.common.exception.ApiException;
 import com.attendance.backend.domain.entity.User;
+import com.attendance.backend.domain.entity.UserSession;
 import com.attendance.backend.domain.enums.PlatformRole;
 import com.attendance.backend.domain.enums.UserStatus;
 import com.attendance.backend.security.jwt.JwtService;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.util.Locale;
 import java.util.Set;
@@ -25,20 +28,32 @@ import java.util.UUID;
 @Service
 public class AuthService {
 
+    private static final String TOKEN_TYPE_BEARER = "Bearer";
+
+    private static final String REVOKE_REASON_LOGOUT = "LOGOUT";
+    private static final String REVOKE_REASON_LOGOUT_ALL = "LOGOUT_ALL";
+    private static final String REVOKE_REASON_PASSWORD_CHANGED = "PASSWORD_CHANGED";
+
     private final UserRepository userRepository;
+    private final UserSessionRepository userSessionRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final Clock clock;
 
     public AuthService(UserRepository userRepository,
+                       UserSessionRepository userSessionRepository,
                        PasswordEncoder passwordEncoder,
-                       JwtService jwtService) {
+                       JwtService jwtService,
+                       Clock clock) {
         this.userRepository = userRepository;
+        this.userSessionRepository = userSessionRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.clock = clock;
     }
 
-    @Transactional(readOnly = true)
-    public AuthDtos.LoginResponse login(AuthDtos.LoginRequest req) {
+    @Transactional
+    public AuthDtos.LoginResponse login(AuthDtos.LoginRequest req, String ipAddress, String userAgent) {
         String emailNorm = normalizeEmail(req.email());
 
         User user = userRepository.findForLogin(emailNorm)
@@ -52,27 +67,28 @@ public class AuthService {
             throw ApiException.unauthorized("INVALID_CREDENTIALS", "Invalid email or password");
         }
 
-        PlatformRole platformRole = (user.getPlatformRole() != null)
-                ? user.getPlatformRole()
-                : PlatformRole.USER;
+        Instant now = Instant.now(clock);
+        UUID sessionId = UUID.randomUUID();
 
-        JwtService.AccessTokenResult token = jwtService.issueAccessToken(user);
+        JwtService.TokenBundle tokenBundle = jwtService.issueTokenBundle(user, sessionId, now);
 
-        return new AuthDtos.LoginResponse(
-                "Bearer",
-                token.accessToken(),
-                token.expiresAt(),
-                new AuthDtos.UserInfo(
-                        user.getId(),
-                        user.getEmail(),
-                        user.getFullName(),
-                        platformRole.name()
-                )
-        );
+        UserSession session = new UserSession();
+        session.setId(sessionId);
+        session.setUserId(user.getId());
+        session.setRefreshTokenHash(jwtService.hashRefreshToken(tokenBundle.refreshToken()));
+        session.setDeviceId(normalizeNullable(req.deviceId()));
+        session.setIpAddress(normalizeNullable(ipAddress));
+        session.setUserAgent(truncateUserAgent(userAgent));
+        session.setIssuedAt(now);
+        session.setExpiresAt(tokenBundle.refreshTokenExpiresAt());
+
+        userSessionRepository.save(session);
+
+        return toLoginResponse(user, tokenBundle);
     }
 
     @Transactional
-    public RegisterResponse register(RegisterRequest req) {
+    public RegisterResponse register(RegisterRequest req, String ipAddress, String userAgent) {
         try {
             String emailNorm = normalizeEmail(req.email());
             String fullName = normalizeText(req.fullName());
@@ -115,21 +131,126 @@ public class AuthService {
 
             userRepository.saveAndFlush(user);
 
+            Instant now = Instant.now(clock);
+            UUID sessionId = UUID.randomUUID();
+
+            JwtService.TokenBundle tokenBundle = jwtService.issueTokenBundle(user, sessionId, now);
+
+            UserSession session = new UserSession();
+            session.setId(sessionId);
+            session.setUserId(user.getId());
+            session.setRefreshTokenHash(jwtService.hashRefreshToken(tokenBundle.refreshToken()));
+            session.setDeviceId(deviceId);
+            session.setIpAddress(normalizeNullable(ipAddress));
+            session.setUserAgent(truncateUserAgent(userAgent));
+            session.setIssuedAt(now);
+            session.setExpiresAt(tokenBundle.refreshTokenExpiresAt());
+
+            userSessionRepository.save(session);
+
             return new RegisterResponse(
-                    "Bearer",
-                    "TEMP_TOKEN",
-                    Instant.now().plusSeconds(3600),
+                    TOKEN_TYPE_BEARER,
+                    tokenBundle.accessToken(),
+                    tokenBundle.accessTokenExpiresAt(),
+                    tokenBundle.refreshToken(),
+                    tokenBundle.refreshTokenExpiresAt(),
+                    tokenBundle.sessionId(),
                     new RegisterResponse.UserSummary(
                             user.getId(),
                             user.getEmail(),
                             user.getFullName(),
-                            user.getPlatformRole().name()
+                            resolvePlatformRole(user).name()
                     ),
                     true
             );
         } catch (DataIntegrityViolationException ex) {
             throw mapRegisterConflict(ex);
         }
+    }
+
+    @Transactional
+    public AuthDtos.LoginResponse refresh(AuthDtos.RefreshRequest req) {
+        String rawRefreshToken = req.refreshToken();
+        if (!StringUtils.hasText(rawRefreshToken)) {
+            throw ApiException.badRequest("REFRESH_TOKEN_REQUIRED", "refreshToken is required");
+        }
+
+        JwtService.ParsedJwt parsed;
+        try {
+            parsed = jwtService.parseAndValidate(rawRefreshToken);
+        } catch (Exception ex) {
+            throw ApiException.unauthorized("INVALID_REFRESH_TOKEN", "Invalid refresh token");
+        }
+
+        if (!JwtService.TOKEN_TYPE_REFRESH.equals(parsed.type())) {
+            throw ApiException.unauthorized("INVALID_REFRESH_TOKEN", "Invalid refresh token");
+        }
+
+        Instant now = Instant.now(clock);
+
+        UserSession session = userSessionRepository.findByIdForUpdate(parsed.sessionId())
+                .orElseThrow(() -> ApiException.unauthorized("INVALID_REFRESH_TOKEN", "Invalid refresh token"));
+
+        if (session.isRevoked() || session.isExpiredAt(now)) {
+            throw ApiException.unauthorized("SESSION_REVOKED", "Session is no longer active");
+        }
+
+        if (!session.getUserId().equals(parsed.userId())) {
+            throw ApiException.unauthorized("INVALID_REFRESH_TOKEN", "Invalid refresh token");
+        }
+
+        if (!jwtService.matchesRefreshTokenHash(rawRefreshToken, session.getRefreshTokenHash())) {
+            throw ApiException.unauthorized("INVALID_REFRESH_TOKEN", "Invalid refresh token");
+        }
+
+        User user = getCurrentActiveUserOrThrow(parsed.userId());
+
+        JwtService.TokenBundle tokenBundle = jwtService.issueTokenBundle(user, session.getId(), now);
+
+        session.setRefreshTokenHash(jwtService.hashRefreshToken(tokenBundle.refreshToken()));
+        session.setIssuedAt(now);
+        session.setExpiresAt(tokenBundle.refreshTokenExpiresAt());
+        session.setLastUsedAt(now);
+
+        userSessionRepository.save(session);
+
+        return toLoginResponse(user, tokenBundle);
+    }
+
+    @Transactional
+    public void logout(AuthDtos.LogoutRequest req) {
+        String rawRefreshToken = req.refreshToken();
+        if (!StringUtils.hasText(rawRefreshToken)) {
+            throw ApiException.badRequest("REFRESH_TOKEN_REQUIRED", "refreshToken is required");
+        }
+
+        JwtService.ParsedJwt parsed;
+        try {
+            parsed = jwtService.parseAndValidate(rawRefreshToken);
+        } catch (Exception ex) {
+            return;
+        }
+
+        if (!JwtService.TOKEN_TYPE_REFRESH.equals(parsed.type())) {
+            return;
+        }
+
+        Instant now = Instant.now(clock);
+
+        userSessionRepository.findByIdForUpdate(parsed.sessionId())
+                .ifPresent(session -> {
+                    if (!session.isRevoked()) {
+                        session.revoke(now, REVOKE_REASON_LOGOUT);
+                        userSessionRepository.save(session);
+                    }
+                });
+    }
+
+    @Transactional
+    public void logoutAll(UUID userId) {
+        User user = getCurrentActiveUserOrThrow(userId);
+        Instant now = Instant.now(clock);
+        userSessionRepository.revokeAllActiveByUserId(user.getId(), now, REVOKE_REASON_LOGOUT_ALL);
     }
 
     @Transactional(readOnly = true)
@@ -181,11 +302,17 @@ public class AuthService {
         }
 
         if (req.getCurrentPassword().equals(req.getNewPassword())) {
-            throw ApiException.unprocessable("NEW_PASSWORD_MUST_BE_DIFFERENT", "New password must be different from current password");
+            throw ApiException.unprocessable(
+                    "NEW_PASSWORD_MUST_BE_DIFFERENT",
+                    "New password must be different from current password"
+            );
         }
 
         user.setPasswordHash(passwordEncoder.encode(req.getNewPassword()));
         userRepository.save(user);
+
+        Instant now = Instant.now(clock);
+        userSessionRepository.revokeAllActiveByUserId(user.getId(), now, REVOKE_REASON_PASSWORD_CHANGED);
     }
 
     private User getCurrentActiveUserOrThrow(UUID userId) {
@@ -201,6 +328,27 @@ public class AuthService {
         }
 
         return user;
+    }
+
+    private AuthDtos.LoginResponse toLoginResponse(User user, JwtService.TokenBundle tokenBundle) {
+        return new AuthDtos.LoginResponse(
+                TOKEN_TYPE_BEARER,
+                tokenBundle.accessToken(),
+                tokenBundle.accessTokenExpiresAt(),
+                tokenBundle.refreshToken(),
+                tokenBundle.refreshTokenExpiresAt(),
+                tokenBundle.sessionId(),
+                new AuthDtos.UserInfo(
+                        user.getId(),
+                        user.getEmail(),
+                        user.getFullName(),
+                        resolvePlatformRole(user).name()
+                )
+        );
+    }
+
+    private PlatformRole resolvePlatformRole(User user) {
+        return user.getPlatformRole() != null ? user.getPlatformRole() : PlatformRole.USER;
     }
 
     private void rejectUnknownFields(Set<String> unknownFields) {
@@ -262,5 +410,13 @@ public class AuthService {
         }
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private static String truncateUserAgent(String userAgent) {
+        String normalized = normalizeNullable(userAgent);
+        if (normalized == null) {
+            return null;
+        }
+        return normalized.length() <= 255 ? normalized : normalized.substring(0, 255);
     }
 }
