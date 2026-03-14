@@ -62,3 +62,6 @@ app:
         max-requests-per-email: 3
         max-requests-per-ip: 20
         fail-open: false
+
+    email-outbox:
+      encryption-key-base64: ${EMAIL_OUTBOX_ENCRYPTION_KEY_BASE64}

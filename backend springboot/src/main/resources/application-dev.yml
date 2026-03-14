@@ -67,6 +67,9 @@ app:
         max-requests-per-ip: 20
         fail-open: true
 
+    email-outbox:
+      encryption-key-base64: "n7Jw7GmD2xg4g4o9nHc4k0bqQ5nG5H1o0i4m5Yw1M9Q="
+
 management:
   endpoints:
     web:
