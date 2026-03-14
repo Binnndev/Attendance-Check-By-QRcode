@@ -16,7 +16,6 @@ import com.attendance.backend.domain.entity.UserSession;
 import com.attendance.backend.domain.enums.PlatformRole;
 import com.attendance.backend.domain.enums.UserStatus;
 import com.attendance.backend.mail.EmailOutboxService;
-// import com.attendance.backend.mail.MailService; // remove
 import com.attendance.backend.security.jwt.JwtService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,6 +64,8 @@ public class AuthService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final PasswordResetAttemptService passwordResetAttemptService;
     private final PasswordResetRedisRateLimitService passwordResetRedisRateLimitService;
+    private final LoginRedisRateLimitService loginRedisRateLimitService;
+    private final LoginAttemptService loginAttemptService;
     private final PasswordPolicyService passwordPolicyService;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
@@ -77,6 +78,8 @@ public class AuthService {
                        PasswordResetTokenRepository passwordResetTokenRepository,
                        PasswordResetAttemptService passwordResetAttemptService,
                        PasswordResetRedisRateLimitService passwordResetRedisRateLimitService,
+                       LoginRedisRateLimitService loginRedisRateLimitService,
+                       LoginAttemptService loginAttemptService,
                        PasswordPolicyService passwordPolicyService,
                        PasswordEncoder passwordEncoder,
                        JwtService jwtService,
@@ -88,6 +91,8 @@ public class AuthService {
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.passwordResetAttemptService = passwordResetAttemptService;
         this.passwordResetRedisRateLimitService = passwordResetRedisRateLimitService;
+        this.loginRedisRateLimitService = loginRedisRateLimitService;
+        this.loginAttemptService = loginAttemptService;
         this.passwordPolicyService = passwordPolicyService;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
@@ -99,17 +104,66 @@ public class AuthService {
     @Transactional
     public AuthDtos.LoginResponse login(AuthDtos.LoginRequest req, String ipAddress, String userAgent) {
         String emailNorm = normalizeEmail(req.email());
+        String normalizedIp = normalizeNullable(ipAddress);
+        String normalizedUserAgent = truncateUserAgent(userAgent);
 
-        User user = userRepository.findForLogin(emailNorm)
-                .orElseThrow(() -> ApiException.unauthorized("INVALID_CREDENTIALS", "Invalid email or password"));
+        LoginRedisRateLimitService.Decision preDecision =
+                loginRedisRateLimitService.checkBlocked(emailNorm, normalizedIp);
+
+        if (!preDecision.allowed()) {
+            loginAttemptService.record(
+                    emailNorm,
+                    null,
+                    normalizedIp,
+                    normalizedUserAgent,
+                    preDecision.reason()
+            );
+            throw ApiException.tooManyRequests(
+                    "LOGIN_RATE_LIMITED",
+                    "Too many login attempts. Please try again later."
+            );
+        }
+
+        User user = userRepository.findForLogin(emailNorm).orElse(null);
+
+        if (user == null) {
+            handleFailedLogin(
+                    emailNorm,
+                    null,
+                    normalizedIp,
+                    normalizedUserAgent,
+                    LoginAttemptService.OUTCOME_INVALID_CREDENTIALS
+            );
+        }
 
         if (user.getStatus() != UserStatus.ACTIVE) {
-            throw ApiException.unauthorized("USER_DISABLED", "User is not active");
+            handleFailedLogin(
+                    emailNorm,
+                    user.getId(),
+                    normalizedIp,
+                    normalizedUserAgent,
+                    LoginAttemptService.OUTCOME_USER_NOT_ACTIVE
+            );
         }
 
         if (!passwordEncoder.matches(req.password(), user.getPasswordHash())) {
-            throw ApiException.unauthorized("INVALID_CREDENTIALS", "Invalid email or password");
+            handleFailedLogin(
+                    emailNorm,
+                    user.getId(),
+                    normalizedIp,
+                    normalizedUserAgent,
+                    LoginAttemptService.OUTCOME_INVALID_CREDENTIALS
+            );
         }
+
+        loginRedisRateLimitService.clearOnSuccess(emailNorm, normalizedIp);
+        loginAttemptService.record(
+                emailNorm,
+                user.getId(),
+                normalizedIp,
+                normalizedUserAgent,
+                LoginAttemptService.OUTCOME_SUCCESS
+        );
 
         Instant now = Instant.now(clock);
         UUID sessionId = UUID.randomUUID();
@@ -121,14 +175,46 @@ public class AuthService {
         session.setUserId(user.getId());
         session.setRefreshTokenHash(jwtService.hashRefreshToken(tokenBundle.refreshToken()));
         session.setDeviceId(normalizeNullable(req.deviceId()));
-        session.setIpAddress(normalizeNullable(ipAddress));
-        session.setUserAgent(truncateUserAgent(userAgent));
+        session.setIpAddress(normalizedIp);
+        session.setUserAgent(normalizedUserAgent);
         session.setIssuedAt(now);
         session.setExpiresAt(tokenBundle.refreshTokenExpiresAt());
 
         userSessionRepository.save(session);
 
         return toLoginResponse(user, tokenBundle);
+    }
+
+    private void handleFailedLogin(String emailNorm,
+                                   UUID userId,
+                                   String normalizedIp,
+                                   String normalizedUserAgent,
+                                   String baseOutcome) {
+        LoginRedisRateLimitService.Decision failureDecision =
+                loginRedisRateLimitService.recordFailure(emailNorm, normalizedIp);
+
+        String finalOutcome = failureDecision.allowed() ? baseOutcome : failureDecision.reason();
+
+        loginAttemptService.record(
+                emailNorm,
+                userId,
+                normalizedIp,
+                normalizedUserAgent,
+                finalOutcome
+        );
+
+        if (!failureDecision.allowed()) {
+            throw ApiException.tooManyRequests(
+                    "LOGIN_RATE_LIMITED",
+                    "Too many login attempts. Please try again later."
+            );
+        }
+
+        if (LoginAttemptService.OUTCOME_USER_NOT_ACTIVE.equals(baseOutcome)) {
+            throw ApiException.unauthorized("USER_DISABLED", "User is not active");
+        }
+
+        throw ApiException.unauthorized("INVALID_CREDENTIALS", "Invalid email or password");
     }
 
     @Transactional
