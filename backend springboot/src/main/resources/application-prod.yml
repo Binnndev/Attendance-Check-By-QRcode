@@ -64,4 +64,16 @@ app:
         fail-open: false
 
     email-outbox:
+      enabled: true
+      poll-delay-ms: 3000
+      batch-size: 50
+      max-attempts: 8
+      base-backoff-seconds: 30
       encryption-key-base64: ${EMAIL_OUTBOX_ENCRYPTION_KEY_BASE64}
+
+    login-rate-limit:
+      redis-key-prefix: "auth:login:rl:prod"
+      window-minutes: 15
+      max-requests-per-ip: 20
+      max-requests-per-email-ip: 5
+      fail-open: false

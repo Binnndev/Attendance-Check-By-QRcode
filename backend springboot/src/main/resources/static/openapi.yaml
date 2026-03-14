@@ -16,12 +16,14 @@ tags:
   - name: Attendance
   - name: Absence
   - name: Events
+  - name: Admin Security
+
 paths:
   /auth/login:
     post:
       tags:
         - Auth
-      security: []
+      security: [ ]
       summary: Login
       requestBody:
         required: true
@@ -38,6 +40,9 @@ paths:
                 $ref: '#/components/schemas/TokenResponse'
         '401':
           $ref: '#/components/responses/Err401'
+        '429':
+          $ref: '#/components/responses/Err429'
+
   /auth/refresh:
     post:
       tags:
@@ -61,6 +66,7 @@ paths:
           $ref: '#/components/responses/Err400'
         '401':
           $ref: '#/components/responses/Err401'
+
   /auth/logout:
     post:
       tags:
@@ -78,6 +84,7 @@ paths:
           description: No Content
         '400':
           $ref: '#/components/responses/Err400'
+
   /auth/forgot-password:
     post:
       tags:
@@ -99,6 +106,7 @@ paths:
                 $ref: '#/components/schemas/ForgotPasswordResponse'
         '400':
           $ref: '#/components/responses/Err400'
+
   /auth/reset-password:
     post:
       tags:
@@ -118,6 +126,7 @@ paths:
           $ref: '#/components/responses/Err400'
         '404':
           $ref: '#/components/responses/Err404'
+
   /auth/logout-all:
     post:
       tags:
@@ -130,6 +139,7 @@ paths:
           $ref: '#/components/responses/Err401'
         '404':
           $ref: '#/components/responses/Err404'
+
   /me:
     get:
       tags:
@@ -169,6 +179,7 @@ paths:
           $ref: '#/components/responses/Err401'
         '404':
           $ref: '#/components/responses/Err404'
+
   /auth/change-password:
     post:
       tags:
@@ -191,6 +202,7 @@ paths:
           $ref: '#/components/responses/Err404'
         '422':
           $ref: '#/components/responses/Err422'
+
   /auth/register:
     post:
       tags:
@@ -314,6 +326,84 @@ paths:
           $ref: '#/components/responses/Err403'
         '404':
           $ref: '#/components/responses/Err404'
+
+  /admin/security/overview:
+    get:
+      tags:
+        - Admin Security
+      summary: Get security overview dashboard
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecurityOverviewResponse'
+        '401':
+          $ref: '#/components/responses/Err401'
+        '403':
+          $ref: '#/components/responses/Err403'
+
+  /admin/security/password-reset-abuse:
+      get:
+        tags:
+          - Admin Security
+        summary: List password reset abuse signals
+        parameters:
+          - $ref: '#/components/parameters/Page'
+          - $ref: '#/components/parameters/Size'
+        responses:
+          '200':
+            description: OK
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/PagePasswordResetAbuseResponse'
+          '401':
+            $ref: '#/components/responses/Err401'
+          '403':
+            $ref: '#/components/responses/Err403'
+
+  /admin/security/login-abuse:
+      get:
+        tags:
+          - Admin Security
+        summary: List login abuse signals
+        parameters:
+          - $ref: '#/components/parameters/Page'
+          - $ref: '#/components/parameters/Size'
+        responses:
+          '200':
+            description: OK
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/PageLoginAbuseResponse'
+          '401':
+            $ref: '#/components/responses/Err401'
+          '403':
+            $ref: '#/components/responses/Err403'
+
+  /admin/security/email-outbox:
+      get:
+        tags:
+          - Admin Security
+        summary: List email outbox delivery status
+        parameters:
+          - $ref: '#/components/parameters/Page'
+          - $ref: '#/components/parameters/Size'
+        responses:
+          '200':
+            description: OK
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/PageEmailOutboxResponse'
+          '401':
+            $ref: '#/components/responses/Err401'
+          '403':
+            $ref: '#/components/responses/Err403'
+
   /groups/join:
     post:
       tags:
@@ -1061,7 +1151,194 @@ components:
                 status: 422
                 code: BUSINESS_RULE_VIOLATION
                 message: Rule violation
+
+    Err429:
+      description: Too Many Requests
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          examples:
+            throttled:
+              value:
+                status: 429
+                code: TOO_MANY_REQUESTS
+                message: Too many requests
+
   schemas:
+    SecurityOverviewResponse:
+      type: object
+      properties:
+        generatedAt:
+          type: string
+          format: date-time
+        loginRateLimitedLast15m:
+          type: integer
+        passwordResetRateLimitedLast60m:
+          type: integer
+        pendingEmailOutbox:
+          type: integer
+        retryEmailOutbox:
+          type: integer
+        failedEmailOutbox:
+          type: integer
+      required:
+        - generatedAt
+        - loginRateLimitedLast15m
+        - passwordResetRateLimitedLast60m
+        - pendingEmailOutbox
+        - retryEmailOutbox
+        - failedEmailOutbox
+
+    PasswordResetAbuseItemResponse:
+        type: object
+        properties:
+          email:
+            type: string
+          userId:
+            type: string
+            format: uuid
+            nullable: true
+          ipAddress:
+            type: string
+            nullable: true
+          userAgent:
+            type: string
+            nullable: true
+          outcome:
+            type: string
+          createdAt:
+            type: string
+            format: date-time
+        required:
+          - email
+          - outcome
+          - createdAt
+
+    PagePasswordResetAbuseResponse:
+        type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/PasswordResetAbuseItemResponse'
+          page:
+            type: integer
+          size:
+            type: integer
+          totalElements:
+            type: integer
+          totalPages:
+            type: integer
+        required:
+          - items
+          - page
+          - size
+          - totalElements
+          - totalPages
+
+    LoginAbuseItemResponse:
+        type: object
+        properties:
+          email:
+            type: string
+          userId:
+            type: string
+            format: uuid
+            nullable: true
+          ipAddress:
+            type: string
+            nullable: true
+          userAgent:
+            type: string
+            nullable: true
+          outcome:
+            type: string
+          createdAt:
+            type: string
+            format: date-time
+        required:
+          - email
+          - outcome
+          - createdAt
+
+    PageLoginAbuseResponse:
+        type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/LoginAbuseItemResponse'
+          page:
+            type: integer
+          size:
+            type: integer
+          totalElements:
+            type: integer
+          totalPages:
+            type: integer
+        required:
+          - items
+          - page
+          - size
+          - totalElements
+          - totalPages
+
+    EmailOutboxItemResponse:
+        type: object
+        properties:
+          id:
+            type: string
+            format: uuid
+          type:
+            type: string
+          status:
+            type: string
+          attemptCount:
+            type: integer
+          nextAttemptAt:
+            type: string
+            format: date-time
+            nullable: true
+          sentAt:
+            type: string
+            format: date-time
+            nullable: true
+          lastErrorCode:
+            type: string
+            nullable: true
+          createdAt:
+            type: string
+            format: date-time
+        required:
+          - id
+          - type
+          - status
+          - attemptCount
+          - createdAt
+
+    PageEmailOutboxResponse:
+        type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/EmailOutboxItemResponse'
+          page:
+            type: integer
+          size:
+            type: integer
+          totalElements:
+            type: integer
+          totalPages:
+            type: integer
+        required:
+          - items
+          - page
+          - size
+          - totalElements
+          - totalPages
+
     UpdateMeRequest:
       type: object
       additionalProperties: false
