@@ -33,6 +33,27 @@ public class AuthDtos {
             String refreshToken
     ) {}
 
+    public record ForgotPasswordRequest(
+            @NotBlank(message = "email is required")
+            @Email(message = "email is invalid")
+            @Size(max = 190, message = "email must be at most 190 characters")
+            String email
+    ) {}
+
+    public record ForgotPasswordResponse(
+            String message
+    ) {}
+
+    public record ResetPasswordRequest(
+            @NotBlank(message = "token is required")
+            @Size(max = 512, message = "token must be at most 512 characters")
+            String token,
+
+            @NotBlank(message = "newPassword is required")
+            @Size(min = 8, max = 200, message = "newPassword must be between 8 and 200 characters")
+            String newPassword
+    ) {}
+
     public record LoginResponse(
             String tokenType,
             String accessToken,

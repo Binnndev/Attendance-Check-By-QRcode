@@ -1,0 +1,34 @@
+package com.attendance.backend.mail;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import java.time.Instant;
+
+@Service
+public class LoggingMailService implements MailService {
+
+    private static final Logger log = LoggerFactory.getLogger(LoggingMailService.class);
+
+    @Override
+    public void sendPasswordResetEmail(String toEmail,
+                                       String fullName,
+                                       String resetUrl,
+                                       Instant expiresAt) {
+        log.info("""
+                
+                ==================== DEV PASSWORD RESET MAIL ====================
+                toEmail   : {}
+                fullName  : {}
+                expiresAt : {}
+                resetUrl  : {}
+                =================================================================
+                """,
+                toEmail,
+                fullName,
+                expiresAt,
+                resetUrl
+        );
+    }
+}

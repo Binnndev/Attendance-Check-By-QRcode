@@ -52,6 +52,18 @@ public class AuthController {
         authService.logout(req);
     }
 
+    @PostMapping("/forgot-password")
+    public AuthDtos.ForgotPasswordResponse forgotPassword(@Valid @RequestBody AuthDtos.ForgotPasswordRequest req,
+                                                          HttpServletRequest request) {
+        return authService.forgotPassword(req, resolveClientIp(request), resolveUserAgent(request));
+    }
+
+    @PostMapping("/reset-password")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void resetPassword(@Valid @RequestBody AuthDtos.ResetPasswordRequest req) {
+        authService.resetPassword(req);
+    }
+
     @PostMapping("/logout-all")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void logoutAll(@AuthenticationPrincipal UserPrincipal principal) {

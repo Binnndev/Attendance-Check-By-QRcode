@@ -11,6 +11,8 @@ spring:
     username: root
     password: 123456
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      connection-init-sql: SET time_zone = '+00:00'
 
   jpa:
     open-in-view: false
@@ -47,6 +49,12 @@ app:
     secret: "CHANGE_ME_DEV_32_CHARS_MINIMUM_SECRET"
     accessTokenMinutes: 15
     refreshTokenDays: 30
+
+  auth:
+    password-reset:
+      token-minutes: 30
+      frontend-reset-url: "http://localhost:3000/reset-password"
+      max-requests-per-hour: 3
 
 management:
   endpoints:
