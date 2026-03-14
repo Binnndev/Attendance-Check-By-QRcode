@@ -322,13 +322,12 @@ public class AttendanceAdminService {
 
     private void ensureNoOtherOpenSession(UUID groupId, UUID currentSessionId) {
         Number cnt = (Number) entityManager.createNativeQuery("""
-            select count(*)
-            from attendance_sessions s
-            where s.group_id = UUID_TO_BIN(:groupId, 1)
-              and s.id <> UUID_TO_BIN(:sessionId, 1)
-              and s.status = 'OPEN'
-              and s.deleted_at is null
-        """)
+        select count(*)
+        from attendance_sessions s
+        where s.group_id = UUID_TO_BIN(:groupId, 1)
+          and s.id <> UUID_TO_BIN(:sessionId, 1)
+          and s.status = 'OPEN'
+    """)
                 .setParameter("groupId", groupId.toString())
                 .setParameter("sessionId", currentSessionId.toString())
                 .getSingleResult();

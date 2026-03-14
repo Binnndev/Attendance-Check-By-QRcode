@@ -180,6 +180,24 @@ paths:
         '404':
           $ref: '#/components/responses/Err404'
 
+  /me/attendance/summary:
+    get:
+      tags:
+        - Attendance
+      summary: Get current user attendance summary
+      description: >
+        Source of truth is session_attendance joined with CLOSED attendance_sessions.
+        OPEN/CANCELLED sessions are not counted. deleted_at != null sessions are excluded.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttendanceSummaryResponse'
+        '401':
+          $ref: '#/components/responses/Err401'
+
   /auth/change-password:
     post:
       tags:
@@ -308,6 +326,34 @@ paths:
           $ref: '#/components/responses/Err404'
         '409':
           $ref: '#/components/responses/Err409'
+
+  /groups/{groupId}/attendance/summary:
+    get:
+      tags:
+        - Attendance
+      summary: Get paged attendance summary of group members (OWNER/CO_HOST)
+      description: >
+        Returns paged summary for APPROVED members of the group.
+        Source of truth is session_attendance joined with CLOSED attendance_sessions.
+        OPEN/CANCELLED sessions are not counted. deleted_at != null sessions are excluded.
+      parameters:
+        - $ref: '#/components/parameters/GroupId'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageAttendanceGroupSummaryResponse'
+        '401':
+          $ref: '#/components/responses/Err401'
+        '403':
+          $ref: '#/components/responses/Err403'
+        '404':
+          $ref: '#/components/responses/Err404'
+
   /groups/{groupId}/archive:
     post:
       tags:
@@ -1231,6 +1277,135 @@ components:
                 message: Too many requests
 
   schemas:
+    
+    WarningLevel:
+      type: string
+      enum:
+        - NONE
+        - WARNING_15
+        - CRITICAL_20
+
+    RiskLevel:
+        type: string
+        enum:
+          - LOW
+          - MEDIUM
+          - HIGH
+
+    AttendanceSummaryResponse:
+        type: object
+        properties:
+          totalSessions:
+            type: integer
+            format: int64
+          presentCount:
+            type: integer
+            format: int64
+          lateCount:
+            type: integer
+            format: int64
+          absentCount:
+            type: integer
+            format: int64
+          excusedCount:
+            type: integer
+            format: int64
+          attendancePercent:
+            type: number
+            format: double
+            example: 83.33
+          absencePercent:
+            type: number
+            format: double
+            example: 16.67
+          warningLevel:
+            $ref: '#/components/schemas/WarningLevel'
+          riskLevel:
+            $ref: '#/components/schemas/RiskLevel'
+        required:
+          - totalSessions
+          - presentCount
+          - lateCount
+          - absentCount
+          - excusedCount
+          - attendancePercent
+          - absencePercent
+          - warningLevel
+          - riskLevel
+
+    AttendanceGroupSummaryItem:
+        type: object
+        properties:
+          userId:
+            type: string
+            format: uuid
+          fullName:
+            type: string
+          email:
+            type: string
+            format: email
+          totalSessions:
+            type: integer
+            format: int64
+          presentCount:
+            type: integer
+            format: int64
+          lateCount:
+            type: integer
+            format: int64
+          absentCount:
+            type: integer
+            format: int64
+          excusedCount:
+            type: integer
+            format: int64
+          attendancePercent:
+            type: number
+            format: double
+          absencePercent:
+            type: number
+            format: double
+          warningLevel:
+            $ref: '#/components/schemas/WarningLevel'
+          riskLevel:
+            $ref: '#/components/schemas/RiskLevel'
+        required:
+          - userId
+          - fullName
+          - email
+          - totalSessions
+          - presentCount
+          - lateCount
+          - absentCount
+          - excusedCount
+          - attendancePercent
+          - absencePercent
+          - warningLevel
+          - riskLevel
+
+    PageAttendanceGroupSummaryResponse:
+        type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/AttendanceGroupSummaryItem'
+          page:
+            type: integer
+          size:
+            type: integer
+          totalElements:
+            type: integer
+            format: int64
+          totalPages:
+            type: integer
+        required:
+          - items
+          - page
+          - size
+          - totalElements
+          - totalPages
+    
     SecurityOverviewResponse:
       type: object
       properties:
