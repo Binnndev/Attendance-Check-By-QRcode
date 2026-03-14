@@ -15,7 +15,8 @@ import com.attendance.backend.domain.entity.User;
 import com.attendance.backend.domain.entity.UserSession;
 import com.attendance.backend.domain.enums.PlatformRole;
 import com.attendance.backend.domain.enums.UserStatus;
-import com.attendance.backend.mail.MailService;
+import com.attendance.backend.mail.EmailOutboxService;
+// import com.attendance.backend.mail.MailService; // remove
 import com.attendance.backend.security.jwt.JwtService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,7 +69,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final PasswordResetProperties passwordResetProperties;
-    private final MailService mailService;
+    private final EmailOutboxService emailOutboxService;
     private final Clock clock;
 
     public AuthService(UserRepository userRepository,
@@ -80,7 +81,7 @@ public class AuthService {
                        PasswordEncoder passwordEncoder,
                        JwtService jwtService,
                        PasswordResetProperties passwordResetProperties,
-                       MailService mailService,
+                       EmailOutboxService emailOutboxService,
                        Clock clock) {
         this.userRepository = userRepository;
         this.userSessionRepository = userSessionRepository;
@@ -91,7 +92,7 @@ public class AuthService {
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.passwordResetProperties = passwordResetProperties;
-        this.mailService = mailService;
+        this.emailOutboxService = emailOutboxService;
         this.clock = clock;
     }
 
@@ -365,7 +366,8 @@ public class AuthService {
         String resetUrl = buildResetUrl(passwordResetProperties.getFrontendResetUrl(), plainToken);
 
         try {
-            mailService.sendPasswordResetEmail(
+            emailOutboxService.enqueuePasswordResetEmail(
+                    token.getId(),
                     user.getEmail(),
                     user.getFullName(),
                     resetUrl,
