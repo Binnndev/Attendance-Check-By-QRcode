@@ -17,6 +17,19 @@ spring:
       password: ${REDIS_PASSWORD:}
       timeout: 3s
 
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    protocol: smtp
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 5000
+      mail.smtp.writetimeout: 5000
+
   jpa:
     hibernate:
       ddl-auto: none
@@ -52,6 +65,10 @@ app:
     accessTokenMinutes: 15
     refreshTokenDays: 30
 
+  mail:
+    from-address: ${MAIL_FROM_ADDRESS}
+    from-name: ${MAIL_FROM_NAME:Attendance System}
+
   auth:
     password-reset:
       token-minutes: 30
@@ -63,6 +80,13 @@ app:
         max-requests-per-ip: 20
         fail-open: false
 
+    login-rate-limit:
+      redis-key-prefix: "auth:login:rl:prod"
+      window-minutes: 15
+      max-requests-per-ip: 20
+      max-requests-per-email-ip: 5
+      fail-open: false
+
     email-outbox:
       enabled: true
       poll-delay-ms: 3000
@@ -70,10 +94,3 @@ app:
       max-attempts: 8
       base-backoff-seconds: 30
       encryption-key-base64: ${EMAIL_OUTBOX_ENCRYPTION_KEY_BASE64}
-
-    login-rate-limit:
-      redis-key-prefix: "auth:login:rl:prod"
-      window-minutes: 15
-      max-requests-per-ip: 20
-      max-requests-per-email-ip: 5
-      fail-open: false
