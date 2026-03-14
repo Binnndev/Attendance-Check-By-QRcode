@@ -2,11 +2,13 @@ package com.attendance.backend.mail;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 
 @Service
+@Profile("dev")
 public class LoggingMailService implements MailService {
 
     private static final Logger log = LoggerFactory.getLogger(LoggingMailService.class);

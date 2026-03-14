@@ -8,20 +8,30 @@ import org.springframework.stereotype.Component;
 public class PasswordResetProperties {
 
     /**
-     * Số phút reset token còn hiệu lực.
+     * Token reset password sống bao nhiêu phút.
      */
     private int tokenMinutes = 30;
 
     /**
-     * URL FE nhận token reset, ví dụ:
-     * http://localhost:3000/reset-password
+     * FE reset password URL.
+     * Ví dụ: https://app.example.com/reset-password
      */
     private String frontendResetUrl;
 
     /**
-     * Giới hạn số lần forgot-password trong 1 giờ / 1 user.
+     * Window rate limit tính theo phút.
      */
-    private int maxRequestsPerHour = 3;
+    private int rateLimitWindowMinutes = 60;
+
+    /**
+     * Số request forgot-password tối đa / window / email hash.
+     */
+    private int maxRequestsPerWindowPerEmail = 3;
+
+    /**
+     * Số request forgot-password tối đa / window / IP.
+     */
+    private int maxRequestsPerWindowPerIp = 20;
 
     public int getTokenMinutes() {
         return tokenMinutes;
@@ -39,11 +49,27 @@ public class PasswordResetProperties {
         this.frontendResetUrl = frontendResetUrl;
     }
 
-    public int getMaxRequestsPerHour() {
-        return maxRequestsPerHour;
+    public int getRateLimitWindowMinutes() {
+        return rateLimitWindowMinutes;
     }
 
-    public void setMaxRequestsPerHour(int maxRequestsPerHour) {
-        this.maxRequestsPerHour = maxRequestsPerHour;
+    public void setRateLimitWindowMinutes(int rateLimitWindowMinutes) {
+        this.rateLimitWindowMinutes = rateLimitWindowMinutes;
+    }
+
+    public int getMaxRequestsPerWindowPerEmail() {
+        return maxRequestsPerWindowPerEmail;
+    }
+
+    public void setMaxRequestsPerWindowPerEmail(int maxRequestsPerWindowPerEmail) {
+        this.maxRequestsPerWindowPerEmail = maxRequestsPerWindowPerEmail;
+    }
+
+    public int getMaxRequestsPerWindowPerIp() {
+        return maxRequestsPerWindowPerIp;
+    }
+
+    public void setMaxRequestsPerWindowPerIp(int maxRequestsPerWindowPerIp) {
+        this.maxRequestsPerWindowPerIp = maxRequestsPerWindowPerIp;
     }
 }

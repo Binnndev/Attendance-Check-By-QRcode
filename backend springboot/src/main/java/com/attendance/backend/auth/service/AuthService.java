@@ -41,6 +41,7 @@ import java.util.UUID;
 public class AuthService {
 
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
+    private static final Logger securityAuditLog = LoggerFactory.getLogger("SECURITY_AUDIT");
 
     private static final String TOKEN_TYPE_BEARER = "Bearer";
 
@@ -51,6 +52,7 @@ public class AuthService {
 
     private static final String RESET_TOKEN_REVOKE_REASON_SUPERSEDED = "SUPERSEDED";
     private static final String RESET_TOKEN_REVOKE_REASON_COMPLETED = "PASSWORD_RESET_COMPLETED";
+    private static final String RESET_TOKEN_REVOKE_REASON_MAIL_DELIVERY_FAILED = "MAIL_DELIVERY_FAILED";
 
     private static final String FORGOT_PASSWORD_NEUTRAL_MESSAGE =
             "If the email exists, a password reset link has been sent.";
@@ -60,6 +62,8 @@ public class AuthService {
     private final UserRepository userRepository;
     private final UserSessionRepository userSessionRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final PasswordResetAttemptService passwordResetAttemptService;
+    private final PasswordPolicyService passwordPolicyService;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final PasswordResetProperties passwordResetProperties;
@@ -69,6 +73,8 @@ public class AuthService {
     public AuthService(UserRepository userRepository,
                        UserSessionRepository userSessionRepository,
                        PasswordResetTokenRepository passwordResetTokenRepository,
+                       PasswordResetAttemptService passwordResetAttemptService,
+                       PasswordPolicyService passwordPolicyService,
                        PasswordEncoder passwordEncoder,
                        JwtService jwtService,
                        PasswordResetProperties passwordResetProperties,
@@ -77,6 +83,8 @@ public class AuthService {
         this.userRepository = userRepository;
         this.userSessionRepository = userSessionRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
+        this.passwordResetAttemptService = passwordResetAttemptService;
+        this.passwordPolicyService = passwordPolicyService;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.passwordResetProperties = passwordResetProperties;
@@ -131,7 +139,7 @@ public class AuthService {
                 throw ApiException.badRequest("EMAIL_REQUIRED", "email is required");
             }
 
-            validatePasswordOrThrow(req.password());
+            passwordPolicyService.validateOrThrow(req.password());
 
             if (!StringUtils.hasText(fullName) || fullName.length() < 2) {
                 throw ApiException.badRequest("FULL_NAME_INVALID", "fullName must be at least 2 characters");
@@ -281,23 +289,28 @@ public class AuthService {
             throw ApiException.badRequest("EMAIL_REQUIRED", "email is required");
         }
 
-        User user = userRepository.findByEmailNorm(emailNorm).orElse(null);
-        if (user == null) {
-            return new AuthDtos.ForgotPasswordResponse(FORGOT_PASSWORD_NEUTRAL_MESSAGE);
-        }
+        String normalizedIp = normalizeNullable(ipAddress);
+        String normalizedUserAgent = truncateUserAgent(userAgent);
 
-        if (user.getStatus() != UserStatus.ACTIVE) {
+        User user = userRepository.findByEmailNorm(emailNorm).orElse(null);
+        boolean userExists = user != null;
+        boolean userActive = userExists && user.getStatus() == UserStatus.ACTIVE;
+
+        PasswordResetAttemptService.Decision decision = passwordResetAttemptService.evaluateAndRecord(
+                emailNorm,
+                normalizedIp,
+                normalizedUserAgent,
+                userExists ? user.getId() : null,
+                userExists,
+                userActive
+        );
+
+        if (!decision.allowed()) {
+            auditForgotPassword(emailNorm, userExists ? user.getId() : null, normalizedIp, decision.reason());
             return new AuthDtos.ForgotPasswordResponse(FORGOT_PASSWORD_NEUTRAL_MESSAGE);
         }
 
         Instant now = Instant.now(clock);
-        Instant cutoff = now.minus(1, ChronoUnit.HOURS);
-
-        long recentCount = passwordResetTokenRepository.countByUserIdAndCreatedAtAfter(user.getId(), cutoff);
-        if (recentCount >= passwordResetProperties.getMaxRequestsPerHour()) {
-            return new AuthDtos.ForgotPasswordResponse(FORGOT_PASSWORD_NEUTRAL_MESSAGE);
-        }
-
         String plainToken = generateOpaqueToken();
         byte[] tokenHash = sha256(plainToken);
 
@@ -311,11 +324,11 @@ public class AuthService {
         token.setId(UUID.randomUUID());
         token.setUserId(user.getId());
         token.setTokenHash(tokenHash);
-        token.setRequestedIp(normalizeNullable(ipAddress));
-        token.setUserAgent(truncateUserAgent(userAgent));
+        token.setRequestedIp(normalizedIp);
+        token.setUserAgent(normalizedUserAgent);
         token.setExpiresAt(now.plus(passwordResetProperties.getTokenMinutes(), ChronoUnit.MINUTES));
 
-        passwordResetTokenRepository.save(token);
+        passwordResetTokenRepository.saveAndFlush(token);
 
         String resetUrl = buildResetUrl(passwordResetProperties.getFrontendResetUrl(), plainToken);
 
@@ -326,8 +339,11 @@ public class AuthService {
                     resetUrl,
                     token.getExpiresAt()
             );
+            auditForgotPassword(emailNorm, user.getId(), normalizedIp, "ISSUED");
         } catch (Exception ex) {
-            log.warn("Failed to send password reset email for userId={}", user.getId(), ex);
+            token.revoke(now, RESET_TOKEN_REVOKE_REASON_MAIL_DELIVERY_FAILED);
+            passwordResetTokenRepository.saveAndFlush(token);
+            auditForgotPassword(emailNorm, user.getId(), normalizedIp, RESET_TOKEN_REVOKE_REASON_MAIL_DELIVERY_FAILED);
         }
 
         return new AuthDtos.ForgotPasswordResponse(FORGOT_PASSWORD_NEUTRAL_MESSAGE);
@@ -340,23 +356,29 @@ public class AuthService {
             throw ApiException.badRequest("RESET_TOKEN_REQUIRED", "token is required");
         }
 
-        validatePasswordOrThrow(req.newPassword());
+        passwordPolicyService.validateOrThrow(req.newPassword());
 
         Instant now = Instant.now(clock);
         byte[] tokenHash = sha256(rawToken);
 
         PasswordResetToken token = passwordResetTokenRepository.findByTokenHashForUpdate(tokenHash)
-                .orElseThrow(() -> ApiException.badRequest("RESET_TOKEN_INVALID", "Reset token is invalid"));
+                .orElseThrow(() -> {
+                    auditResetPassword(null, null, "INVALID_TOKEN");
+                    return ApiException.badRequest("RESET_TOKEN_INVALID", "Reset token is invalid");
+                });
 
         if (token.isUsed()) {
+            auditResetPassword(token.getUserId(), token.getRequestedIp(), "ALREADY_USED");
             throw ApiException.badRequest("RESET_TOKEN_ALREADY_USED", "Reset token has already been used");
         }
 
         if (token.isRevoked()) {
+            auditResetPassword(token.getUserId(), token.getRequestedIp(), "REVOKED");
             throw ApiException.badRequest("RESET_TOKEN_REVOKED", "Reset token has been revoked");
         }
 
         if (token.isExpiredAt(now)) {
+            auditResetPassword(token.getUserId(), token.getRequestedIp(), "EXPIRED");
             throw ApiException.badRequest("RESET_TOKEN_EXPIRED", "Reset token has expired");
         }
 
@@ -364,6 +386,7 @@ public class AuthService {
                 .orElseThrow(() -> ApiException.notFound("USER_NOT_FOUND", "User not found"));
 
         if (user.getStatus() != UserStatus.ACTIVE) {
+            auditResetPassword(user.getId(), token.getRequestedIp(), "USER_NOT_ACTIVE");
             throw ApiException.badRequest("USER_DISABLED", "User is not active");
         }
 
@@ -384,6 +407,20 @@ public class AuthService {
                 now,
                 REVOKE_REASON_PASSWORD_RESET
         );
+
+        auditResetPassword(user.getId(), token.getRequestedIp(), "SUCCESS");
+    }
+
+    @Transactional
+    public void logoutAll(UUID userId) {
+        User user = getCurrentActiveUserOrThrow(userId);
+        Instant now = Instant.now(clock);
+        userSessionRepository.revokeAllActiveByUserId(user.getId(), now, REVOKE_REASON_LOGOUT_ALL);
+    }
+
+    @Transactional(readOnly = true)
+    public User getCurrentUser(UUID userId) {
+        return getCurrentActiveUserOrThrow(userId);
     }
 
     @Transactional
@@ -436,25 +473,13 @@ public class AuthService {
             );
         }
 
-        validatePasswordOrThrow(req.getNewPassword());
+        passwordPolicyService.validateOrThrow(req.getNewPassword());
 
         user.setPasswordHash(passwordEncoder.encode(req.getNewPassword()));
         userRepository.save(user);
 
         Instant now = Instant.now(clock);
         userSessionRepository.revokeAllActiveByUserId(user.getId(), now, REVOKE_REASON_PASSWORD_CHANGED);
-    }
-
-    @Transactional
-    public void logoutAll(UUID userId) {
-        User user = getCurrentActiveUserOrThrow(userId);
-        Instant now = Instant.now(clock);
-        userSessionRepository.revokeAllActiveByUserId(user.getId(), now, REVOKE_REASON_LOGOUT_ALL);
-    }
-
-    @Transactional(readOnly = true)
-    public User getCurrentUser(UUID userId) {
-        return getCurrentActiveUserOrThrow(userId);
     }
 
     private User getCurrentActiveUserOrThrow(UUID userId) {
@@ -535,20 +560,6 @@ public class AuthService {
         return msg == null ? "" : msg.toLowerCase(Locale.ROOT);
     }
 
-    private void validatePasswordOrThrow(String password) {
-        if (!StringUtils.hasText(password)) {
-            throw ApiException.badRequest("PASSWORD_REQUIRED", "password is required");
-        }
-
-        if (password.length() < 8) {
-            throw ApiException.badRequest("PASSWORD_TOO_SHORT", "password must be at least 8 characters");
-        }
-
-        if (password.length() > 200) {
-            throw ApiException.badRequest("PASSWORD_TOO_LONG", "password must be at most 200 characters");
-        }
-    }
-
     private String buildResetUrl(String frontendResetUrl, String token) {
         if (!StringUtils.hasText(frontendResetUrl)) {
             throw ApiException.badRequest(
@@ -572,8 +583,43 @@ public class AuthService {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             return digest.digest(raw.getBytes(StandardCharsets.UTF_8));
         } catch (Exception ex) {
-            throw new IllegalStateException("Failed to hash reset token", ex);
+            throw new IllegalStateException("Failed to hash value", ex);
         }
+    }
+
+    private void auditForgotPassword(String emailNorm, UUID userId, String ipAddress, String outcome) {
+        securityAuditLog.info(
+                "event=forgot_password userId={} email={} ip={} outcome={}",
+                userId,
+                maskEmail(emailNorm),
+                ipAddress,
+                outcome
+        );
+    }
+
+    private void auditResetPassword(UUID userId, String ipAddress, String outcome) {
+        securityAuditLog.info(
+                "event=reset_password userId={} ip={} outcome={}",
+                userId,
+                ipAddress,
+                outcome
+        );
+    }
+
+    private String maskEmail(String email) {
+        if (!StringUtils.hasText(email) || !email.contains("@")) {
+            return "***";
+        }
+
+        String[] parts = email.split("@", 2);
+        String local = parts[0];
+        String domain = parts[1];
+
+        if (local.length() <= 2) {
+            return "***@" + domain;
+        }
+
+        return local.charAt(0) + "***" + local.charAt(local.length() - 1) + "@" + domain;
     }
 
     private static String normalizeEmail(String email) {
