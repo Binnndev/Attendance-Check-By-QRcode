@@ -14,6 +14,12 @@ spring:
     hikari:
       connection-init-sql: SET time_zone = '+00:00'
 
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 3s
+
   jpa:
     open-in-view: false
     hibernate:
@@ -54,7 +60,12 @@ app:
     password-reset:
       token-minutes: 30
       frontend-reset-url: "http://localhost:3000/reset-password"
-      max-requests-per-hour: 3
+      rate-limit:
+        redis-key-prefix: "auth:password-reset:rl:dev"
+        window-minutes: 60
+        max-requests-per-email: 3
+        max-requests-per-ip: 20
+        fail-open: true
 
 management:
   endpoints:

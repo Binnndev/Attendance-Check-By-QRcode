@@ -63,6 +63,7 @@ public class AuthService {
     private final UserSessionRepository userSessionRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final PasswordResetAttemptService passwordResetAttemptService;
+    private final PasswordResetRedisRateLimitService passwordResetRedisRateLimitService;
     private final PasswordPolicyService passwordPolicyService;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
@@ -74,6 +75,7 @@ public class AuthService {
                        UserSessionRepository userSessionRepository,
                        PasswordResetTokenRepository passwordResetTokenRepository,
                        PasswordResetAttemptService passwordResetAttemptService,
+                       PasswordResetRedisRateLimitService passwordResetRedisRateLimitService,
                        PasswordPolicyService passwordPolicyService,
                        PasswordEncoder passwordEncoder,
                        JwtService jwtService,
@@ -84,6 +86,7 @@ public class AuthService {
         this.userSessionRepository = userSessionRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.passwordResetAttemptService = passwordResetAttemptService;
+        this.passwordResetRedisRateLimitService = passwordResetRedisRateLimitService;
         this.passwordPolicyService = passwordPolicyService;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
@@ -292,21 +295,50 @@ public class AuthService {
         String normalizedIp = normalizeNullable(ipAddress);
         String normalizedUserAgent = truncateUserAgent(userAgent);
 
+        PasswordResetRedisRateLimitService.Decision rateDecision =
+                passwordResetRedisRateLimitService.evaluate(emailNorm, normalizedIp);
+
         User user = userRepository.findByEmailNorm(emailNorm).orElse(null);
         boolean userExists = user != null;
         boolean userActive = userExists && user.getStatus() == UserStatus.ACTIVE;
 
-        PasswordResetAttemptService.Decision decision = passwordResetAttemptService.evaluateAndRecord(
-                emailNorm,
-                normalizedIp,
-                normalizedUserAgent,
-                userExists ? user.getId() : null,
-                userExists,
-                userActive
-        );
+        if (!rateDecision.allowed()) {
+            passwordResetAttemptService.record(
+                    emailNorm,
+                    userExists ? user.getId() : null,
+                    normalizedIp,
+                    normalizedUserAgent,
+                    rateDecision.reason()
+            );
+            auditForgotPassword(emailNorm, userExists ? user.getId() : null, normalizedIp, rateDecision.reason());
+            return new AuthDtos.ForgotPasswordResponse(FORGOT_PASSWORD_NEUTRAL_MESSAGE);
+        }
 
-        if (!decision.allowed()) {
-            auditForgotPassword(emailNorm, userExists ? user.getId() : null, normalizedIp, decision.reason());
+        if (rateDecision.degraded()) {
+            auditForgotPassword(emailNorm, userExists ? user.getId() : null, normalizedIp, rateDecision.reason());
+        }
+
+        if (!userExists) {
+            passwordResetAttemptService.record(
+                    emailNorm,
+                    null,
+                    normalizedIp,
+                    normalizedUserAgent,
+                    PasswordResetAttemptService.OUTCOME_EMAIL_NOT_FOUND
+            );
+            auditForgotPassword(emailNorm, null, normalizedIp, PasswordResetAttemptService.OUTCOME_EMAIL_NOT_FOUND);
+            return new AuthDtos.ForgotPasswordResponse(FORGOT_PASSWORD_NEUTRAL_MESSAGE);
+        }
+
+        if (!userActive) {
+            passwordResetAttemptService.record(
+                    emailNorm,
+                    user.getId(),
+                    normalizedIp,
+                    normalizedUserAgent,
+                    PasswordResetAttemptService.OUTCOME_USER_NOT_ACTIVE
+            );
+            auditForgotPassword(emailNorm, user.getId(), normalizedIp, PasswordResetAttemptService.OUTCOME_USER_NOT_ACTIVE);
             return new AuthDtos.ForgotPasswordResponse(FORGOT_PASSWORD_NEUTRAL_MESSAGE);
         }
 
@@ -339,11 +371,27 @@ public class AuthService {
                     resetUrl,
                     token.getExpiresAt()
             );
-            auditForgotPassword(emailNorm, user.getId(), normalizedIp, "ISSUED");
+
+            passwordResetAttemptService.record(
+                    emailNorm,
+                    user.getId(),
+                    normalizedIp,
+                    normalizedUserAgent,
+                    PasswordResetAttemptService.OUTCOME_ISSUED
+            );
+            auditForgotPassword(emailNorm, user.getId(), normalizedIp, PasswordResetAttemptService.OUTCOME_ISSUED);
         } catch (Exception ex) {
             token.revoke(now, RESET_TOKEN_REVOKE_REASON_MAIL_DELIVERY_FAILED);
             passwordResetTokenRepository.saveAndFlush(token);
-            auditForgotPassword(emailNorm, user.getId(), normalizedIp, RESET_TOKEN_REVOKE_REASON_MAIL_DELIVERY_FAILED);
+
+            passwordResetAttemptService.record(
+                    emailNorm,
+                    user.getId(),
+                    normalizedIp,
+                    normalizedUserAgent,
+                    PasswordResetAttemptService.OUTCOME_MAIL_DELIVERY_FAILED
+            );
+            auditForgotPassword(emailNorm, user.getId(), normalizedIp, PasswordResetAttemptService.OUTCOME_MAIL_DELIVERY_FAILED);
         }
 
         return new AuthDtos.ForgotPasswordResponse(FORGOT_PASSWORD_NEUTRAL_MESSAGE);
@@ -363,22 +411,50 @@ public class AuthService {
 
         PasswordResetToken token = passwordResetTokenRepository.findByTokenHashForUpdate(tokenHash)
                 .orElseThrow(() -> {
-                    auditResetPassword(null, null, "INVALID_TOKEN");
+                    passwordResetAttemptService.record(
+                            "",
+                            null,
+                            null,
+                            null,
+                            PasswordResetAttemptService.OUTCOME_RESET_INVALID_TOKEN
+                    );
+                    auditResetPassword(null, null, PasswordResetAttemptService.OUTCOME_RESET_INVALID_TOKEN);
                     return ApiException.badRequest("RESET_TOKEN_INVALID", "Reset token is invalid");
                 });
 
         if (token.isUsed()) {
-            auditResetPassword(token.getUserId(), token.getRequestedIp(), "ALREADY_USED");
+            passwordResetAttemptService.record(
+                    "",
+                    token.getUserId(),
+                    token.getRequestedIp(),
+                    token.getUserAgent(),
+                    PasswordResetAttemptService.OUTCOME_RESET_ALREADY_USED
+            );
+            auditResetPassword(token.getUserId(), token.getRequestedIp(), PasswordResetAttemptService.OUTCOME_RESET_ALREADY_USED);
             throw ApiException.badRequest("RESET_TOKEN_ALREADY_USED", "Reset token has already been used");
         }
 
         if (token.isRevoked()) {
-            auditResetPassword(token.getUserId(), token.getRequestedIp(), "REVOKED");
+            passwordResetAttemptService.record(
+                    "",
+                    token.getUserId(),
+                    token.getRequestedIp(),
+                    token.getUserAgent(),
+                    PasswordResetAttemptService.OUTCOME_RESET_REVOKED
+            );
+            auditResetPassword(token.getUserId(), token.getRequestedIp(), PasswordResetAttemptService.OUTCOME_RESET_REVOKED);
             throw ApiException.badRequest("RESET_TOKEN_REVOKED", "Reset token has been revoked");
         }
 
         if (token.isExpiredAt(now)) {
-            auditResetPassword(token.getUserId(), token.getRequestedIp(), "EXPIRED");
+            passwordResetAttemptService.record(
+                    "",
+                    token.getUserId(),
+                    token.getRequestedIp(),
+                    token.getUserAgent(),
+                    PasswordResetAttemptService.OUTCOME_RESET_EXPIRED
+            );
+            auditResetPassword(token.getUserId(), token.getRequestedIp(), PasswordResetAttemptService.OUTCOME_RESET_EXPIRED);
             throw ApiException.badRequest("RESET_TOKEN_EXPIRED", "Reset token has expired");
         }
 
@@ -386,7 +462,14 @@ public class AuthService {
                 .orElseThrow(() -> ApiException.notFound("USER_NOT_FOUND", "User not found"));
 
         if (user.getStatus() != UserStatus.ACTIVE) {
-            auditResetPassword(user.getId(), token.getRequestedIp(), "USER_NOT_ACTIVE");
+            passwordResetAttemptService.record(
+                    user.getEmail(),
+                    user.getId(),
+                    token.getRequestedIp(),
+                    token.getUserAgent(),
+                    PasswordResetAttemptService.OUTCOME_RESET_USER_NOT_ACTIVE
+            );
+            auditResetPassword(user.getId(), token.getRequestedIp(), PasswordResetAttemptService.OUTCOME_RESET_USER_NOT_ACTIVE);
             throw ApiException.badRequest("USER_DISABLED", "User is not active");
         }
 
@@ -408,7 +491,14 @@ public class AuthService {
                 REVOKE_REASON_PASSWORD_RESET
         );
 
-        auditResetPassword(user.getId(), token.getRequestedIp(), "SUCCESS");
+        passwordResetAttemptService.record(
+                user.getEmail(),
+                user.getId(),
+                token.getRequestedIp(),
+                token.getUserAgent(),
+                PasswordResetAttemptService.OUTCOME_RESET_SUCCESS
+        );
+        auditResetPassword(user.getId(), token.getRequestedIp(), PasswordResetAttemptService.OUTCOME_RESET_SUCCESS);
     }
 
     @Transactional
