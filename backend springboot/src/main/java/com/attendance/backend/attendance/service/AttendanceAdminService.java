@@ -194,6 +194,14 @@ public class AttendanceAdminService {
         String oldIpAddress = attendance.ipAddress;
         String oldUserAgent = attendance.userAgent;
 
+        if (oldStatus == AttendanceStatus.EXCUSED && attendance.excusedByRequestId != null) {
+            throw ApiException.conflict(
+                    "EXCUSED_MUST_BE_REVERTED_VIA_ABSENCE_WORKFLOW",
+                    "Excused attendance must be reverted via absence request workflow before manual reset"
+            );
+        }
+
+
         boolean alreadyClean =
                 attendance.attendanceStatus == AttendanceStatus.ABSENT &&
                         attendance.checkInAt == null &&

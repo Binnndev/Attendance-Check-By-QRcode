@@ -180,6 +180,68 @@ paths:
         '404':
           $ref: '#/components/responses/Err404'
 
+  /me/absence-requests:
+    get:
+      tags:
+        - Absence
+      summary: List my absence requests
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/AbsenceRequestStatus'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageAbsenceResponse'
+        '401':
+          $ref: '#/components/responses/Err401'
+        '403':
+          $ref: '#/components/responses/Err403'
+        '404':
+          $ref: '#/components/responses/Err404'
+
+  /absence-requests/{requestId}/revert:
+    post:
+      tags:
+        - Absence
+      summary: Revert approved absence request (OWNER/CO_HOST)
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RevertAbsenceRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AbsenceResponse'
+        '401':
+          $ref: '#/components/responses/Err401'
+        '403':
+          $ref: '#/components/responses/Err403'
+        '404':
+          $ref: '#/components/responses/Err404'
+        '409':
+          $ref: '#/components/responses/Err409'
+
+
   /me/attendance/summary:
     get:
       tags:
@@ -959,7 +1021,7 @@ paths:
     post:
       tags:
         - Absence
-      summary: Create absence request (XOR enforced by triggers)
+      summary: Create session-scoped absence request
       parameters:
         - $ref: '#/components/parameters/GroupId'
       requestBody:
@@ -975,10 +1037,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AbsenceResponse'
-        '422':
-          $ref: '#/components/responses/Err422'
+        '401':
+          $ref: '#/components/responses/Err401'
         '403':
           $ref: '#/components/responses/Err403'
+        '404':
+          $ref: '#/components/responses/Err404'
+        '409':
+          $ref: '#/components/responses/Err409'
+        '422':
+          $ref: '#/components/responses/Err422'
     get:
       tags:
         - Absence
@@ -1048,10 +1116,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AbsenceResponse'
-        '422':
-          $ref: '#/components/responses/Err422'
+        '401':
+          $ref: '#/components/responses/Err401'
         '403':
           $ref: '#/components/responses/Err403'
+        '404':
+          $ref: '#/components/responses/Err404'
+        '409':
+          $ref: '#/components/responses/Err409'
+        '422':
+          $ref: '#/components/responses/Err422'
   /absence-requests/{requestId}/cancel:
     post:
       tags:
@@ -1071,10 +1145,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AbsenceResponse'
+        '401':
+          $ref: '#/components/responses/Err401'
         '403':
           $ref: '#/components/responses/Err403'
         '404':
           $ref: '#/components/responses/Err404'
+        '409':
+          $ref: '#/components/responses/Err409'
   /sessions/{sessionId}/events:
     get:
       tags:
@@ -1277,7 +1355,9 @@ components:
                 message: Too many requests
 
   schemas:
-    
+
+
+
     WarningLevel:
       type: string
       enum:
@@ -1613,6 +1693,8 @@ components:
         - APPROVED
         - REJECTED
         - CANCELLED
+        - REVERTED
+
     EventType:
       type: string
       enum:
@@ -1624,6 +1706,19 @@ components:
         - REVERT_FROM_EXCUSED
         - SESSION_OPENED
         - SESSION_CLOSED
+        - ABSENCE_REQUEST_CREATED
+        - ABSENCE_REQUEST_APPROVED
+        - ABSENCE_REQUEST_REJECTED
+        - ABSENCE_REQUEST_CANCELLED
+        - ABSENCE_REQUEST_REVERTED
+
+    ManualAttendanceOverrideStatus:
+      type: string
+      enum:
+        - ABSENT
+        - PRESENT
+        - LATE
+
     LoginRequest:
       type: object
       additionalProperties: false
@@ -2221,9 +2316,10 @@ components:
         - qrRotateSeconds
     ManualMarkAttendanceRequest:
       type: object
+      additionalProperties: false
       properties:
         status:
-          $ref: '#/components/schemas/AttendanceStatus'
+          $ref: '#/components/schemas/ManualAttendanceOverrideStatus'
         note:
           type: string
           maxLength: 500
@@ -2309,15 +2405,22 @@ components:
         - sessionId
         - userId
         - attendanceStatus
+
+    RevertAbsenceRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        revertNote:
+          type: string
+          maxLength: 500
+
     CreateAbsenceRequest:
       type: object
+      additionalProperties: false
       properties:
         linkedSessionId:
           type: string
           format: uuid
-        requestedDate:
-          type: string
-          format: date
         reason:
           type: string
           minLength: 3
@@ -2325,9 +2428,11 @@ components:
         evidenceUrl:
           type: string
           maxLength: 500
+          description: Opaque file reference / object URL / attachment key. Binary upload is out of scope for Ticket 6.4b.
       required:
+        - linkedSessionId
         - reason
-      description: 'XOR enforced by triggers: exactly one of linkedSessionId or requestedDate.'
+      description: Session-scoped absence request. requestedDate legacy flow is not supported for new mutable requests in Ticket 6.4b.
     ReviewAbsenceRequest:
       type: object
       properties:
@@ -2356,29 +2461,48 @@ components:
         linkedSessionId:
           type: string
           format: uuid
+          nullable: true
         requestedDate:
           type: string
           format: date
+          nullable: true
         reason:
           type: string
           maxLength: 500
         evidenceUrl:
           type: string
           maxLength: 500
+          nullable: true
         requestStatus:
           $ref: '#/components/schemas/AbsenceRequestStatus'
         reviewerUserId:
           type: string
           format: uuid
+          nullable: true
         reviewerNote:
           type: string
           maxLength: 500
+          nullable: true
         reviewedAt:
           type: string
           format: date-time
+          nullable: true
         cancelledAt:
           type: string
           format: date-time
+          nullable: true
+        revertedByUserId:
+          type: string
+          format: uuid
+          nullable: true
+        revertedAt:
+          type: string
+          format: date-time
+          nullable: true
+        revertNote:
+          type: string
+          maxLength: 500
+          nullable: true
         createdAt:
           type: string
           format: date-time

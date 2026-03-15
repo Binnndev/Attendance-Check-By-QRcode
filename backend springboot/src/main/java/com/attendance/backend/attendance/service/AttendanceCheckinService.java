@@ -102,6 +102,9 @@ public class AttendanceCheckinService {
 
             SessionAttendance attendance = getOrCreateAttendanceLocked(cmd.sessionId(), cmd.userId(), now);
 
+            if (attendance.attendanceStatus == AttendanceStatus.EXCUSED && attendance.excusedByRequestId != null)
+            { throw ApiException.conflict( "ATTENDANCE_ALREADY_EXCUSED", "Attendance already excused by approved absence request" ); }
+
             if (attendance.checkInAt != null) {
                 throw ApiException.conflict("ALREADY_CHECKED_IN", "User already checked in");
             }

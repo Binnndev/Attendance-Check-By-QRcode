@@ -23,7 +23,8 @@ import java.util.UUID;
         indexes = {
                 @Index(name = "idx_ar_group_status_created", columnList = "group_id,request_status,created_at"),
                 @Index(name = "idx_ar_requester_created", columnList = "requester_user_id,created_at"),
-                @Index(name = "idx_ar_session", columnList = "linked_session_id")
+                @Index(name = "idx_ar_session", columnList = "linked_session_id"),
+                @Index(name = "idx_ar_session_requester_status", columnList = "linked_session_id,requester_user_id,request_status")
         }
 )
 public class AbsenceRequest {
@@ -45,18 +46,18 @@ public class AbsenceRequest {
     @Convert(converter = UuidBinary16SwapConverter.class)
     public UUID linkedSessionId;
 
-    @Column(name = "request_status", nullable = false, length = 20)
-    @Enumerated(EnumType.STRING)
-    public AbsenceRequestStatus requestStatus;
+    @Column(name = "requested_date")
+    public LocalDate requestedDate;
 
     @Column(name = "reason", length = 500, nullable = false)
-    public String requestReason;
+    public String reason;
 
     @Column(name = "evidence_url", length = 500)
     public String evidenceUrl;
 
-    @Column(name = "requested_date")
-    public LocalDate requestedDate;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "request_status", length = 20, nullable = false)
+    public AbsenceRequestStatus requestStatus;
 
     @Column(name = "reviewer_user_id", columnDefinition = "BINARY(16)")
     @Convert(converter = UuidBinary16SwapConverter.class)
@@ -71,13 +72,24 @@ public class AbsenceRequest {
     @Column(name = "cancelled_at")
     public Instant cancelledAt;
 
+    @Column(name = "reverted_by_user_id", columnDefinition = "BINARY(16)")
+    @Convert(converter = UuidBinary16SwapConverter.class)
+    public UUID revertedByUserId;
+
+    @Column(name = "reverted_at")
+    public Instant revertedAt;
+
+    @Column(name = "revert_note", length = 500)
+    public String revertNote;
+
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     public Instant createdAt;
 
     @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
     public Instant updatedAt;
 
-    public AbsenceRequest() {}
+    public AbsenceRequest() {
+    }
 
     public boolean isPending() {
         return requestStatus == AbsenceRequestStatus.PENDING;
@@ -96,10 +108,10 @@ public class AbsenceRequest {
     }
 
     public String getReason() {
-        return requestReason;
+        return reason;
     }
 
     public void setReason(String reason) {
-        this.requestReason = reason;
+        this.reason = reason;
     }
 }
