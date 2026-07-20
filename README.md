@@ -1,464 +1,359 @@
-# Attendance Check By QR Code
+# UniAttend — Attendance Check by QR Code
 
 [![Backend CI](https://github.com/binkadev/Attendance-Check-By-QRcode/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/binkadev/Attendance-Check-By-QRcode/actions/workflows/backend-ci.yml)
-![Java](https://img.shields.io/badge/Java-17-blue)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen)
-![MySQL](https://img.shields.io/badge/Database-MySQL-orange)
-![Flyway](https://img.shields.io/badge/Migrations-Flyway-red)
-![OpenAPI](https://img.shields.io/badge/API-OpenAPI%203.0-blueviolet)
-![React](https://img.shields.io/badge/Web-React%20%2B%20Vite-61dafb)
-![Android](https://img.shields.io/badge/Mobile-Android-3ddc84)
-![CI](https://img.shields.io/badge/CI-GitHub%20Actions-black)
+![Java](https://img.shields.io/badge/Java-17-ED8B00?logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.10-6DB33F?logo=springboot&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=111827)
+![Android](https://img.shields.io/badge/Android-Native-3DDC84?logo=android&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-8-4479A1?logo=mysql&logoColor=white)
+![Flyway](https://img.shields.io/badge/Database-Flyway-CC0200?logo=flyway&logoColor=white)
+![OpenAPI](https://img.shields.io/badge/API-OpenAPI%203-6BA539?logo=openapiinitiative&logoColor=white)
 
-A production-like QR attendance platform with a clear client split:
+**UniAttend** is a production-like classroom attendance platform built around a clear product split:
 
-- **Lecturer Web Portal** for managing classes, students, attendance sessions, dynamic QR codes, manual corrections, absence requests, and monitoring views.
-- **Student Android App** for joining classes, scanning QR attendance codes, viewing check-in results, attendance history, notifications, and personal class timelines.
-- **Spring Boot Backend** as the shared rule-enforcing API layer for authentication, authorization, QR validation, attendance policies, absence workflows, audit events, notifications, and fraud/attempt monitoring.
+- **Lecturers use a React web portal** to manage classes, students, attendance sessions, dynamic QR codes, absence requests, attendance history and suspicious activity.
+- **Students use a native Android app** to join classes, scan attendance QR codes and track their own schedules, notifications and attendance records.
+- **A Spring Boot backend** acts as the shared source of truth and enforces authentication, permissions, QR validity, attendance rules, state transitions, audit events and database integrity.
 
-> **Project status:** Academic / portfolio project. Around 90% of the initial planned scope is implemented. This should be described as a **production-like full-stack attendance system**, not as a deployed production system.
-
----
-
-## Demo
-
-> Recommended before using this repository in a CV/interview: add real screenshots and a short demo video. The product logic is already stronger than the visual proof currently shown in the repository.
-
-| Asset | Status | Suggested content |
-|---|---:|---|
-| Product demo video | TODO | 2-4 minute walkthrough: lecturer login -> class management -> open attendance session -> rotate QR -> student scans QR -> attendance result -> lecturer views attendance |
-| Web screenshots | TODO | Lecturer dashboard, class management, create class, class detail, dynamic QR, student list, absence review, fraud/attempt monitoring |
-| Android screenshots | TODO | Login, my classes, class detail/timeline, QR scanner, check-in success, attendance history, notifications, profile |
-| Backend/API screenshots | TODO | Swagger/OpenAPI overview, selected API response, Flyway migrations, GitHub Actions CI pass |
-| Architecture diagram | TODO | Add a polished PNG under `docs/architecture/system-architecture.png` or keep the Mermaid diagram below |
-
-Suggested assets structure:
-
-```text
-docs/
-  screenshots/
-    web-dashboard.png
-    web-class-management.png
-    web-class-detail-dynamic-qr.png
-    web-absence-review.png
-    web-fraud-monitoring.png
-    android-my-classes.png
-    android-qr-scanner.png
-    android-checkin-success.png
-    android-attendance-history.png
-    swagger-overview.png
-    ci-pass.png
-  demo/
-    attendance-demo.mp4
-  architecture/
-    system-architecture.png
-```
-
-When assets are ready, replace this section with real screenshots and a demo link.
+> **Project status:** academic/portfolio project, approximately **90% of the original scope**. The codebase is intentionally described as **production-like**; it is not presented as a deployed production system.
 
 ---
 
-## Table of contents
+## Contents
 
-- [Why this project exists](#why-this-project-exists)
-- [System overview](#system-overview)
-- [Main actors and clients](#main-actors-and-clients)
-- [What makes this project worth reviewing](#what-makes-this-project-worth-reviewing)
-- [Core workflows](#core-workflows)
-- [Tech stack](#tech-stack)
+- [Product overview](#product-overview)
+- [What this project demonstrates](#what-this-project-demonstrates)
+- [System architecture](#system-architecture)
+- [Product capabilities](#product-capabilities)
+- [Core attendance workflow](#core-attendance-workflow)
+- [Backend engineering](#backend-engineering)
+- [API surface](#api-surface)
+- [Data model and migrations](#data-model-and-migrations)
+- [Technology stack](#technology-stack)
 - [Repository structure](#repository-structure)
-- [Backend engineering highlights](#backend-engineering-highlights)
-- [Lecturer Web Portal](#lecturer-web-portal)
-- [Student Android App](#student-android-app)
-- [API documentation](#api-documentation)
-- [Database and Flyway design](#database-and-flyway-design)
-- [Testing and CI](#testing-and-ci)
 - [Run locally](#run-locally)
-- [Docker Compose](#docker-compose)
-- [Current integration notes](#current-integration-notes)
-- [Project scope and honest notes](#project-scope-and-honest-notes)
+- [Testing and CI](#testing-and-ci)
+- [Current scope and limitations](#current-scope-and-limitations)
 - [Roadmap](#roadmap)
-- [Author](#author)
 
 ---
 
-## Why this project exists
+## Product overview
 
-Classroom attendance looks simple if it is treated as a CRUD table. In practice, a reliable attendance system needs to answer harder backend questions:
+UniAttend models a real classroom attendance workflow rather than treating attendance as a simple CRUD table.
 
-- Who is allowed to create, manage, archive, or view a class?
-- Who can open, close, cancel, or reopen an attendance session?
-- When is a QR token valid?
-- How should the backend decide between `PRESENT`, `LATE`, `ABSENT`, and `EXCUSED`?
-- How should duplicate QR scans from a mobile camera be handled safely?
-- How are manual corrections controlled and audited?
-- How should absence requests be submitted, reviewed, approved, rejected, cancelled, and reverted?
-- How can suspicious check-in attempts, shared-device usage, login abuse, and password reset abuse be monitored?
+| Actor | Primary client | Main responsibilities |
+|---|---|---|
+| **Student** | Native Android app | Join classes, view schedules, scan QR, receive check-in result, review personal attendance and notifications |
+| **Lecturer / class owner** | React web portal | Create classes, manage students, run QR sessions, correct attendance, review absences, inspect incidents and export attendance |
+| **Co-host** | React web portal | Assist selected class and session operations according to group permissions |
+| **Backend operator** | REST/Admin API surfaces | Inspect authentication abuse, email outbox, notification delivery and monitoring data where implemented |
 
-This project models those concerns as API contracts, backend services, domain rules, database constraints, migrations, and testable workflows.
+### End-to-end product flow
+
+1. A lecturer creates a class and configures its academic information and weekly schedule.
+2. Students join the class through its join code or join QR.
+3. The lecturer opens an attendance session and displays a rotating QR code.
+4. The Android app scans the QR and submits the token, session ID and stable device ID.
+5. The backend validates membership, session state, QR token, time window, device evidence and optional location policy.
+6. Attendance is recorded as `PRESENT` or `LATE`, with an audit event and monitoring evidence.
+7. The lecturer reviews attendance, absence requests, session history and suspicious activity from the web portal.
 
 ---
 
-## System overview
+## What this project demonstrates
+
+This repository is strongest as a **backend-heavy full-stack portfolio project**.
+
+| Engineering area | Evidence in the project |
+|---|---|
+| **Domain modeling** | Users, groups, memberships, weekly schedules, sessions, QR tokens, attendance records, absence requests, policies, notifications and fraud incidents |
+| **Business rules** | Group roles, membership approval, session lifecycle, check-in windows, late calculation, absence transitions and manual correction restrictions |
+| **Security-aware design** | Spring Security, JWT, persisted refresh sessions, password reset tokens, login/reset attempt logs and device evidence |
+| **Reliability** | Idempotent duplicate QR scans, transactional writes, row locking and database constraints |
+| **Data integrity** | Flyway migrations, foreign keys, unique/check constraints, indexes and selected trigger-based workflow hardening |
+| **Auditability** | Attendance events, check-in attempt logs, fraud incidents and reviewable absence state changes |
+| **API discipline** | Versioned REST API under `/api/v1` and an OpenAPI contract maintained in the backend |
+| **Delivery discipline** | Maven Wrapper, Docker Compose and GitHub Actions using a real MySQL service during backend CI |
+| **Client integration** | React/Vite lecturer portal and native Android student app consuming the same backend rules |
+
+---
+
+## System architecture
 
 ```mermaid
 flowchart LR
-    Student[Student Android App\nJoin class + scan QR + view attendance] --> API[Spring Boot REST API]
-    Lecturer[Lecturer Web Portal\nClass/session/QR/absence management] --> API
+    subgraph Clients
+        WEB[Lecturer Web Portal\nReact + Vite]
+        APP[Student Android App\nJava + CameraX + ML Kit]
+    end
 
-    API --> Security[Spring Security + JWT]
-    API --> Services[Application Services]
-    Services --> Domain[Domain Rules\nAttendance / Absence / Policy / Fraud]
-    Services --> Repo[JPA Repositories]
-    Repo --> DB[(MySQL)]
-    DB --> Flyway[Flyway Migrations]
+    WEB --> API
+    APP --> API
 
-    Services --> Events[Attendance Events]
-    Services --> Notifications[Notification Records]
-    Services --> Mail[Email Outbox]
-    Services --> Monitoring[Login Attempts\nCheck-in Attempts\nFraud Incidents]
-    API --> OpenAPI[OpenAPI Contract]
+    subgraph Backend[Spring Boot Backend]
+        API[REST Controllers\n/api/v1]
+        SEC[Spring Security + JWT]
+        SVC[Application Services]
+        RULES[Domain Rules\nAttendance · Absence · Policy · Fraud]
+        REPO[JPA Repositories]
+        EVENT[Audit & Monitoring\nEvents · Attempts · Incidents]
+        NOTIFY[Notifications & Email Outbox]
+
+        API --> SEC
+        API --> SVC
+        SVC --> RULES
+        SVC --> REPO
+        SVC --> EVENT
+        SVC --> NOTIFY
+    end
+
+    REPO --> DB[(MySQL 8)]
+    MIG[Flyway migrations] --> DB
+    SVC -. optional support .-> REDIS[(Redis)]
+    NOTIFY --> MAIL[SMTP / Mailpit]
+    API --> SPEC[OpenAPI 3 contract]
 ```
 
----
+### Backend layering
 
-## Main actors and clients
-
-| Actor | Client | Main flows |
-|---|---|---|
-| Student | Android App | Register/login, join class, scan QR, view check-in result, view upcoming sessions, attendance history, notifications, profile |
-| Lecturer / Owner | Web Portal | Create class, manage class metadata, manage students, open/close/cancel sessions, rotate QR, manual attendance correction, review absence requests, export attendance |
-| Co-host | Web Portal | Assist selected class/session workflows based on group role permissions |
-| Admin / operator | Backend API surfaces | Security overview, login/password-reset abuse monitoring, email outbox and notification delivery surfaces |
-
----
-
-## What makes this project worth reviewing
-
-This project is not valuable because it has many endpoints. It is valuable because it models a realistic attendance domain where correctness matters.
-
-| Area | What the project demonstrates |
+| Layer | Responsibility |
 |---|---|
-| Product thinking | Clear split between lecturer web workflows and student mobile workflows |
-| Domain modeling | Users, classes/groups, members, schedules, sessions, QR tokens, attendance records, absence requests, policies, events, notifications, fraud incidents |
-| Business rules | Role-aware actions, session state transitions, QR check-in windows, late threshold calculation, duplicate scan handling, manual override restrictions |
-| Data integrity | Flyway migrations, relational constraints, unique constraints, check constraints, indexes, selected trigger-based hardening |
-| Security-aware design | JWT authentication, persisted refresh sessions, logout-all support, password reset token tracking, login/password-reset attempt logs |
-| Auditability | Attendance events, absence transition tracking, check-in attempt logs, fraud incident management surfaces |
-| API discipline | OpenAPI contract maintained in the backend repository |
-| CI discipline | GitHub Actions backend workflow using a MySQL service and Maven test execution |
-| Full-stack integration | Spring Boot backend, React/Vite lecturer portal, native Android student app, Docker Compose infrastructure |
+| **Controller** | HTTP contracts, authentication principal resolution, input validation and response mapping |
+| **Service** | Use-case orchestration, authorization-aware business logic, transactions and domain state changes |
+| **Repository / EntityManager** | JPA queries, locking and persistence |
+| **Database** | Relational integrity, indexes, constraints and selected workflow hardening |
+| **OpenAPI** | Shared contract for client integration and API review |
 
 ---
 
-## Core workflows
+## Product capabilities
 
-### Lecturer workflow
+### Lecturer Web Portal
+
+Location: [`UniPortalAttendWeb/`](./UniPortalAttendWeb)
+
+The web application is explicitly designed as a **lecturer portal**.
+
+#### Dashboard and class operations
+
+- Teaching dashboard with active class, absence and suspicious-activity summaries
+- Attendance trend visualization by class and time range
+- Upcoming teaching schedule
+- Teaching-class search, semester filtering, sorting and pagination
+- Create-class workflow with academic metadata and weekly schedule configuration
+- Collapsible desktop navigation for dense management screens
+
+#### Class management
+
+- Class overview and student roster
+- Membership status and attendance-risk indicators
+- Join-class code/QR presentation
+- Attendance summary and export actions where backed by the API
+- Per-class navigation for students, QR sessions, session history, fraud incidents and absence requests
+
+#### Live attendance operations
+
+- Start or reopen an attendance session
+- Configure open duration, late threshold and QR rotation interval
+- Display dynamic QR code in normal or projector-oriented mode
+- Pause/continue scanning and extend the session window
+- View valid check-in count and attendance percentage
+- End an active session
+
+#### Review workflows
+
+- Session history with status, time range and attendance rate
+- Manual attendance correction and reset flows
+- Suspicious-activity/fraud incident review
+- Absence-request filtering, review and status visibility
+
+### Student Android App
+
+Location: [`UniPortalAttendApp/`](./UniPortalAttendApp)
+
+The native Android application is designed for the **student self-service journey**.
+
+- Register and log in
+- View profile and personal notifications
+- Browse joined and pending classes
+- Search classes and filter by academic term
+- View weekly class schedule
+- Join a class by join code/QR
+- View class details, lecturer information and attendance history
+- Scan QR codes with CameraX and Google ML Kit
+- Distinguish `JOIN:` and `ATTEND:` QR payloads
+- Send the attendance token with a stable Android device ID
+- Display successful check-in details
+- Handle expired, invalid, wrong-session and permission-related responses
+- View personal attendance summary and per-class history
+
+### Spring Boot Backend
+
+Location: [`backend springboot/`](./backend%20springboot)
+
+The backend is the system's strongest engineering component and the shared source of truth for both clients.
+
+- Authentication and session management
+- Group/class lifecycle and membership approval
+- Weekly schedules and academic metadata
+- Attendance-session lifecycle
+- Dynamic QR issuance and validation
+- QR and manual attendance updates
+- Absence-request workflow
+- Attendance policies and student risk/status calculations
+- Notifications and email-outbox infrastructure
+- Check-in attempt logging and fraud-incident surfaces
+- Admin/security monitoring endpoints
+- OpenAPI documentation and Flyway-managed schema evolution
+
+---
+
+## Core attendance workflow
 
 ```mermaid
 sequenceDiagram
+    autonumber
     actor Lecturer
     participant Web as Lecturer Web Portal
     participant API as Spring Boot API
     participant DB as MySQL
-
-    Lecturer->>Web: Login
-    Web->>API: POST /api/v1/auth/login
-    API->>DB: Validate user + create session
-    API-->>Web: Access token + refresh token
-
-    Lecturer->>Web: Create/manage class
-    Web->>API: POST /api/v1/groups
-    API->>DB: Persist class + schedules + owner role
+    participant App as Student Android App
+    actor Student
 
     Lecturer->>Web: Open attendance session
-    Web->>API: POST /api/v1/groups/{groupId}/sessions
-    API->>DB: Create OPEN attendance session
+    Web->>API: POST /groups/{groupId}/sessions
+    API->>DB: Persist OPEN session
 
-    Lecturer->>Web: Rotate dynamic QR
-    Web->>API: POST /api/v1/sessions/{sessionId}/qr/rotate
-    API->>DB: Store hashed QR token metadata
-    API-->>Web: Return plaintext token once
+    Web->>API: POST /sessions/{sessionId}/qr/rotate
+    API->>DB: Revoke/expire prior token and persist token hash
+    API-->>Web: Return plaintext QR token for display
 
-    Lecturer->>Web: Review attendance/absence/fraud
-    Web->>API: Query session, attendance, absence, fraud APIs
-    API-->>Web: Management data
+    Student->>App: Scan ATTEND QR
+    App->>API: POST /sessions/{sessionId}/checkin/qr\n(token, deviceId, optional location)
+
+    API->>DB: Lock session/attendance data
+    API->>API: Validate approved membership
+    API->>API: Validate session and QR token
+    API->>API: Validate time window and optional location
+    API->>API: Compute PRESENT or LATE
+    API->>DB: Save attendance and audit event
+    API->>DB: Record attempt/fraud evidence where applicable
+    API-->>App: Return attendance result
+
+    Web->>API: Read events, attendance and incidents
+    API-->>Web: Updated lecturer view
 ```
 
-### Student workflow
-
-```mermaid
-sequenceDiagram
-    actor Student
-    participant App as Student Android App
-    participant API as Spring Boot API
-    participant DB as MySQL
-
-    Student->>App: Login
-    App->>API: POST /api/v1/auth/login
-    API-->>App: Access token + refresh token
-
-    Student->>App: Join class by QR/code
-    App->>API: POST /api/v1/groups/join
-    API->>DB: Create/update group membership
-    API-->>App: Membership status
-
-    Student->>App: Scan attendance QR
-    App->>API: POST /api/v1/sessions/{sessionId}/checkin/qr
-    API->>DB: Validate session, membership, QR token, time window, device, optional location
-    API->>DB: Save attendance + event + monitoring data
-    API-->>App: PRESENT or LATE result
-
-    Student->>App: View history/notifications
-    App->>API: GET /api/v1/groups/{groupId}/me/attendance-history
-    App->>API: GET /api/v1/me/notifications
-```
-
----
-
-## Tech stack
-
-### Backend
-
-| Area | Technology |
-|---|---|
-| Language | Java 17 |
-| Framework | Spring Boot 3.x |
-| API | Spring Web REST, OpenAPI 3.0, springdoc-openapi |
-| Security | Spring Security, JWT/JJWT |
-| Persistence | Spring Data JPA, Hibernate |
-| Database | MySQL 8.x |
-| Migrations | Flyway |
-| Mail | Spring Mail + email outbox model |
-| Cache / infra support | Redis where configured |
-| Testing | JUnit 5, Mockito, Spring Boot Test, MockMvc, Spring Security Test, Testcontainers support |
-| Build | Maven Wrapper |
-| CI | GitHub Actions |
-| Container | Dockerfile + Docker Compose |
-
-### Lecturer Web Portal
-
-| Area | Technology |
-|---|---|
-| Framework | React |
-| Build tool | Vite |
-| Routing | React Router |
-| UI support | Tailwind CSS, lucide-react, react-hot-toast |
-| Charts | Recharts |
-| QR display | qrcode.react |
-
-### Student Android App
-
-| Area | Technology |
-|---|---|
-| Platform | Native Android |
-| Language | Java |
-| Build | Gradle / Android Gradle Plugin |
-| Min SDK | 27 |
-| Target SDK | 36 |
-| QR scanning | CameraX + Google ML Kit Barcode Scanning |
-| API client | Retrofit + Gson |
-| UI foundation | AppCompat, Material Components, ConstraintLayout |
-
----
-
-## Repository structure
+### Check-in rule summary
 
 ```text
-.
-├── backend springboot/        # Spring Boot backend
-│   ├── src/main/java/com/attendance/backend/
-│   │   ├── auth/
-│   │   ├── group/
-│   │   ├── attendance/
-│   │   ├── absence/
-│   │   ├── notification/
-│   │   ├── fraud/
-│   │   ├── adminsecurity/
-│   │   ├── me/
-│   │   ├── stats/
-│   │   ├── mail/
-│   │   ├── common/
-│   │   └── config/
-│   ├── src/main/resources/db/migration/
-│   ├── src/main/resources/static/openapi.yaml
-│   ├── src/test/java/
-│   ├── Dockerfile
-│   └── pom.xml
-│
-├── UniPortalAttendWeb/        # Lecturer Web Portal - React + Vite
-│   ├── src/api/
-│   ├── src/components/
-│   ├── src/features/
-│   │   ├── auth/
-│   │   ├── classes/
-│   │   ├── dashboard/
-│   │   ├── attendance-history/
-│   │   ├── legal/
-│   │   └── support/
-│   └── package.json
-│
-├── UniPortalAttendApp/        # Student Android App - Native Android
-│   ├── app/src/main/java/com/ptithcm/attendapp/
-│   │   ├── api/
-│   │   ├── model/
-│   │   ├── view/
-│   │   └── viewmodel/
-│   ├── app/build.gradle
-│   └── settings.gradle
-│
-├── .github/workflows/
-│   └── backend-ci.yml
-│
-└── docker-compose.yml
+Reject when the session is not OPEN.
+Reject when the user is not an APPROVED group member.
+Reject malformed, invalid, revoked, expired or wrong-session QR tokens.
+Reject before check-in opens or after the check-in window closes.
+
+lateThreshold = checkinOpenAt + lateAfterMinutes
+
+now <= lateThreshold        -> PRESENT
+lateThreshold < now <= close -> LATE
 ```
 
-> Repository cleanup note: if another Android workspace exists and is no longer the main app, archive it or document it clearly. For recruiter review, `UniPortalAttendApp/` should be presented as the primary student app.
+### Duplicate-scan behavior
+
+Mobile cameras may emit the same scan multiple times. The backend treats an already successful check-in as an idempotent operation:
+
+- Existing successful attendance is returned instead of rewriting it.
+- `checkInAt` is not moved forward by repeated scans.
+- Duplicate requests do not create unnecessary attendance events.
+
+This protects the business record from UI/camera behavior and makes the endpoint safer under retries.
 
 ---
 
-## Backend engineering highlights
+## Backend engineering
 
 ### Authentication and account security
 
-- Register and login
-- JWT-based authentication
+- JWT access-token authentication with JJWT
 - Persisted refresh sessions
-- Refresh token flow
-- Logout current session
-- Logout all sessions
-- Change password
-- Forgot/reset password flow
-- Login attempt and password reset attempt tracking for monitoring abuse patterns
+- Refresh, logout and logout-all flows
+- Password change and reset workflows
+- Password reset token persistence
+- Login-attempt and password-reset-attempt logging
+- Authenticated `/me` profile API
 
-### Class and membership management
+### Authorization and group roles
 
-- Create and manage class groups
-- Owner/co-host/member role model
-- Pending/approved/rejected/removed membership states
-- Join class by code/QR flow
-- Approve/reject/remove members
-- Promote/demote co-hosts
-- Transfer ownership support
-- Academic metadata such as semester, academic year, course code, class code, campus, room, schedules, and total sessions
+The backend separates platform authentication from class-level membership.
 
-### Attendance session management
+- Group roles include owner/co-host/member-style responsibilities.
+- Membership has its own lifecycle such as pending, approved, rejected and removed.
+- Lecturer actions are guarded by ownership/co-host permissions.
+- Student participation requires approved class membership.
 
-- Create attendance session for a group
-- Query open session
-- Close session
-- Cancel session
-- Reopen check-in window where supported
-- Session statuses such as `OPEN`, `CLOSED`, and `CANCELLED`
-- Soft-delete style session handling where supported
-- Attendance list and session event visibility
+### QR token security
 
-### Dynamic QR attendance
+- The displayed token is associated with a specific attendance session.
+- Token references/hashes are persisted rather than relying on the client as a source of truth.
+- Expired, revoked, malformed and wrong-session tokens are rejected.
+- QR rotation supports short-lived dynamic attendance codes.
+- The Android scanner normalizes the expected `<tokenId>.<secret>` token format before submission.
 
-- Rotate QR token for a live attendance session
-- Return plaintext QR token only at rotation time
-- Persist token hash/reference metadata
-- Validate QR token against the target session
-- Reject wrong-session, expired, revoked, malformed, or invalid tokens
-- Enforce check-in open/close window
-- Compute `PRESENT` or `LATE` based on `lateAfterMinutes`
-- Treat duplicate scans idempotently where the first successful check-in already exists
-- Capture IP, user agent, device ID, optional geolocation, and distance evidence when available
+### Transactional correctness
 
-### Manual attendance correction
+- Attendance writes execute inside transactions.
+- Session/attendance data is locked for check-in-sensitive operations.
+- A session/user attendance record is created or locked safely before mutation.
+- Unique database keys protect one logical attendance record per user and session.
+- Data-integrity exceptions are translated into API-level errors.
 
-- Manual mark attendance as `PRESENT`, `LATE`, or `ABSENT`
-- Reset attendance back to `ABSENT`
-- Keep `EXCUSED` under absence workflow rather than ordinary manual override
-- Record attendance events for audit-style visibility
+### Device and location evidence
 
-### Absence request workflow
+- QR check-in requires a stable `deviceId`.
+- The Android client currently uses `Settings.Secure.ANDROID_ID`.
+- Optional latitude/longitude values can be validated together.
+- When a class policy requires location, distance is computed against the configured coordinates and allowed radius.
+- Reuse of the same device for multiple accounts in one session can be marked as suspicious evidence.
 
-- Student submits absence request for a session/class context
-- Lecturer/owner/co-host reviews request
-- Supported lifecycle includes pending, approved, rejected, cancelled, and reverted-style flows
-- Database hardening protects selected invalid transitions
-- Approved absence is separated from ordinary manual attendance edits
+### Attendance events and monitoring
 
-### Attendance policy
+Successful attendance changes can produce an attendance event containing details such as:
 
-- Group-level attendance policy configuration
-- Late weight configuration
-- Warning and critical thresholds
-- Absence count and attendance rate based status surfaces
-- Per-student policy status support
-- Self policy status support for students
+- Previous and new status
+- QR token reference
+- Device ID
+- IP address and user agent
+- Optional coordinates and computed distance
+- Check-in window and late threshold
+- Suspicious flags/reasons
 
-### Notifications and mail
+Failed and successful check-in attempts are also available to the fraud/monitoring layer without making the attendance transaction depend entirely on monitoring success.
 
-- Notification persistence
-- Personal notification list
-- Read/unread state
-- Unread count
+### Absence workflow
+
+The absence module separates `EXCUSED` attendance from ordinary manual correction.
+
+- Students submit session/class-scoped requests.
+- Lecturers review and approve/reject requests.
+- Students can cancel eligible requests.
+- Privileged users can revert eligible decisions.
+- Database hardening protects selected invalid state transitions.
+
+### Notifications and email
+
+- Persistent in-app notification records
+- Read/unread operations and unread count
+- Check-in success notifications
 - Notification delivery tracking surfaces
 - Email outbox model
-- Mailpit-friendly Docker Compose setup for local mail testing
-
-### Fraud and monitoring support
-
-- Check-in attempt logs
-- QR failure code mapping
-- Fraud incident records
-- Shared device suspicious check-in evidence
-- Login abuse and password reset abuse monitoring surfaces
-
-> Fraud support should be described as **monitoring and incident-management support**, not as a fully autonomous fraud detection platform.
+- Mailpit integration for local SMTP testing
 
 ---
 
-## Lecturer Web Portal
+## API surface
 
-The React web portal is designed primarily for lecturers and class owners.
-
-Main capabilities:
-
-- Lecturer login/logout flow
-- Dashboard overview for teaching activity
-- Teaching class list with search, filters, pagination, and sorting
-- Create class flow
-- Class detail page
-- Student/member list
-- Dynamic QR attendance session screen
-- Session history
-- Manual attendance correction views
-- Absence request review views
-- Fraud/attempt monitoring views
-- Attendance summary and export flow where backend support is available
-- Profile screen
-
-The web portal is best described as a **Lecturer Web Portal**, not a generic web client for all roles.
-
----
-
-## Student Android App
-
-The Android app is designed primarily for students.
-
-Main capabilities:
-
-- Register/login
-- View personal profile
-- View joined/pending classes
-- Join class using join code/QR
-- View class details and upcoming sessions
-- Scan QR attendance code using CameraX and ML Kit
-- Submit QR check-in request to backend
-- View check-in result
-- View attendance history in a class
-- View attendance summary
-- View notifications and unread count
-- Mark notifications as read
-
-The Android app is best described as a **Student Android App**, not a lecturer management app.
-
----
-
-## API documentation
+The versioned API is exposed under `/api/v1`.
 
 OpenAPI contract:
 
@@ -466,117 +361,152 @@ OpenAPI contract:
 backend springboot/src/main/resources/static/openapi.yaml
 ```
 
-Representative API groups:
+Representative endpoints:
 
-| Area | Example endpoints |
+| Area | Endpoints |
 |---|---|
-| Auth | `/api/v1/auth/login`, `/api/v1/auth/register`, `/api/v1/auth/refresh`, `/api/v1/auth/logout`, `/api/v1/auth/reset-password` |
-| Me | `/api/v1/me`, `/api/v1/me/classes`, `/api/v1/me/classes/teaching`, `/api/v1/me/classes/timeline`, `/api/v1/me/sessions/upcoming` |
-| Groups | `/api/v1/groups`, `/api/v1/groups/{groupId}`, `/api/v1/groups/join` |
-| Members | `/api/v1/groups/{groupId}/members` |
-| Sessions | `/api/v1/groups/{groupId}/sessions`, `/api/v1/groups/{groupId}/sessions/open`, `/api/v1/sessions/{sessionId}/close`, `/api/v1/sessions/{sessionId}/cancel` |
-| QR | `/api/v1/sessions/{sessionId}/qr/rotate`, `/api/v1/sessions/{sessionId}/checkin/qr` |
-| Attendance | `/api/v1/sessions/{sessionId}/attendance`, `/api/v1/sessions/{sessionId}/attendance-events`, `/api/v1/groups/{groupId}/attendance/export` |
-| Student attendance | `/api/v1/groups/{groupId}/me/attendances`, `/api/v1/groups/{groupId}/me/attendance-history`, `/api/v1/me/attendance/summary` |
-| Absence | `/api/v1/groups/{groupId}/absence-requests`, `/api/v1/absence-requests/{requestId}/review`, `/api/v1/absence-requests/{requestId}/cancel`, `/api/v1/absence-requests/{requestId}/revert` |
-| Attendance policy | `/api/v1/groups/{groupId}/attendance-policy`, `/api/v1/groups/{groupId}/attendance-policy/students` |
-| Notifications | `/api/v1/me/notifications`, `/api/v1/me/notifications/unread-count`, `/api/v1/me/notifications/read-all` |
-| Fraud / monitoring | `/api/v1/groups/{groupId}/fraud-incidents`, admin security and attempt monitoring surfaces |
+| **Authentication** | `POST /auth/register`, `/auth/login`, `/auth/refresh`, `/auth/logout`, `/auth/logout-all`, `/auth/forgot-password`, `/auth/reset-password` |
+| **Current user** | `GET/PATCH /me`, `GET /me/classes`, `GET /me/classes/teaching`, `GET /me/classes/timeline`, `GET /me/sessions/upcoming` |
+| **Classes/groups** | `POST /groups`, `GET/PATCH /groups/{groupId}`, `POST /groups/join` |
+| **Members** | `GET /groups/{groupId}/members` plus membership review/role operations |
+| **Sessions** | `POST/GET /groups/{groupId}/sessions`, `GET /groups/{groupId}/sessions/open`, session close/cancel/reopen operations |
+| **Dynamic QR** | `POST /sessions/{sessionId}/qr/rotate` |
+| **QR check-in** | `POST /sessions/{sessionId}/checkin/qr` |
+| **Attendance** | Session attendance list, manual update/reset, attendance events, group summary and export |
+| **Student history** | `GET /groups/{groupId}/me/attendance-history`, `GET /me/attendance/summary` |
+| **Absence** | Group request list/create and request review/cancel/revert operations |
+| **Policy** | Group attendance policy and per-student policy status |
+| **Notifications** | Personal list, unread count, mark-read and mark-all-read operations |
+| **Monitoring** | Group fraud incidents, check-in attempts and admin security surfaces |
 
-### Contract alignment note
-
-Before presenting this as fully contract-complete, recheck that `openapi.yaml` includes all newer convenience endpoints used by the clients, such as:
-
-- `/api/v1/me/classes/teaching`
-- `/api/v1/me/sessions/upcoming`
-- `/api/v1/groups/{groupId}/attendance/export`
+> The OpenAPI file should remain synchronized whenever convenience endpoints or client contracts change.
 
 ---
 
-## Database and Flyway design
+## Data model and migrations
 
-Flyway migrations live under:
+Database migrations:
 
 ```text
 backend springboot/src/main/resources/db/migration
 ```
 
-Core domain tables include:
+### Main data areas
 
-- `users`
-- `class_groups`
-- `group_members`
-- `group_weekly_schedules`
-- `attendance_sessions`
-- `session_attendance`
-- `qr_tokens`
-- `attendance_events`
-- `absence_requests`
-- `attendance_policies`
-- `notifications`
-- `notification_deliveries`
-- `notification_rule_configs`
-- `email_outbox`
-- `user_sessions`
-- `password_reset_tokens`
-- `password_reset_attempts`
-- `login_attempts`
-- `checkin_attempt_logs`
-- `fraud_incidents`
+| Domain | Representative tables |
+|---|---|
+| **Identity** | `users`, `user_sessions`, `password_reset_tokens`, `login_attempts`, `password_reset_attempts` |
+| **Classes** | `class_groups`, `group_members`, `group_weekly_schedules` |
+| **Attendance** | `attendance_sessions`, `session_attendance`, `qr_tokens`, `attendance_events` |
+| **Absence and policy** | `absence_requests`, `attendance_policies` |
+| **Communication** | `notifications`, `notification_deliveries`, `notification_rule_configs`, `email_outbox` |
+| **Monitoring** | `checkin_attempt_logs`, `fraud_incidents` |
 
-Integrity techniques used:
+### Integrity techniques
 
 - Foreign keys for relationship safety
-- Unique constraints for domain invariants
-- Check constraints for valid status/range values
-- Indexes for common query paths
-- Trigger-based hardening for selected workflows
-- Migration-based schema evolution instead of ad-hoc database edits
+- Unique keys for business invariants
+- Check constraints for allowed statuses and numeric ranges
+- Indexes for common read paths
+- Flyway versioning for repeatable environment setup
+- Selected database triggers for workflow hardening
+- UTC-oriented time handling in backend/database configuration
 
 ---
 
-## Testing and CI
+## Technology stack
 
-Backend tests live under:
+### Backend
+
+| Category | Technology |
+|---|---|
+| Language/runtime | Java 17 bytecode target |
+| Framework | Spring Boot 3.5.10 |
+| Web/API | Spring Web, Validation, springdoc-openapi |
+| Security | Spring Security, JJWT 0.12.6 |
+| Persistence | Spring Data JPA, Hibernate, MySQL Connector |
+| Database | MySQL 8 |
+| Migrations | Flyway Core + Flyway MySQL |
+| Supporting infrastructure | Redis, Spring Mail, Actuator, WebSocket dependency |
+| Testing | JUnit 5, Spring Boot Test, Spring Security Test, Testcontainers support |
+| Build | Maven Wrapper |
+
+### Lecturer Web Portal
+
+| Category | Technology |
+|---|---|
+| UI | React 19.2 |
+| Tooling | Vite 8 |
+| Routing | React Router 7 |
+| Styling | Tailwind CSS 3.4, PostCSS, Autoprefixer |
+| Components | lucide-react, react-hot-toast |
+| Visualization | Recharts |
+| QR display | qrcode.react |
+| Device parsing | ua-parser-js |
+
+### Student Android App
+
+| Category | Technology |
+|---|---|
+| Platform | Native Android |
+| Language compatibility | Java 11 |
+| SDK | minSdk 27, targetSdk 36 |
+| Camera | CameraX 1.3.1 |
+| QR recognition | Google ML Kit Barcode Scanning 17.2.0 |
+| Networking | Retrofit 2.9 + Gson converter |
+| UI | AppCompat, Material Components, ConstraintLayout, SwipeRefreshLayout |
+
+### Local infrastructure
+
+| Service | Purpose |
+|---|---|
+| MySQL 8 | Application data |
+| Redis 7 | Supporting cache/infrastructure capability |
+| Mailpit | Local email capture and inspection |
+| Docker Compose | Reproducible backend development environment |
+
+---
+
+## Repository structure
 
 ```text
-backend springboot/src/test/java
-```
-
-Test configuration examples:
-
-```text
-backend springboot/src/test/resources/application-test.yml
-backend springboot/src/test/resources/sql
-```
-
-Testing and CI coverage includes:
-
-- Unit/service-style tests
-- Controller tests with MockMvc
-- Spring Boot integration-style tests using test profile
-- Spring Security test support
-- MySQL-backed GitHub Actions workflow
-- Surefire report upload on CI
-
-Run backend tests locally:
-
-```bash
-cd "backend springboot"
-./mvnw test
-```
-
-Windows PowerShell:
-
-```powershell
-cd "backend springboot"
-./mvnw.cmd test
-```
-
-GitHub Actions workflow:
-
-```text
-.github/workflows/backend-ci.yml
+.
+├── backend springboot/                 # Shared Spring Boot API
+│   ├── src/main/java/com/attendance/backend/
+│   │   ├── auth/                       # Authentication and current user
+│   │   ├── group/                      # Classes and memberships
+│   │   ├── attendance/                 # Sessions, QR and attendance
+│   │   ├── absence/                    # Absence workflow
+│   │   ├── notification/               # In-app notifications
+│   │   ├── fraud/                      # Attempts and incidents
+│   │   ├── adminsecurity/              # Security monitoring surfaces
+│   │   ├── me/                         # User-scoped read APIs
+│   │   ├── mail/                       # Email/outbox support
+│   │   ├── common/                     # Shared errors and utilities
+│   │   └── config/                     # Application configuration
+│   ├── src/main/resources/
+│   │   ├── db/migration/               # Flyway migrations
+│   │   └── static/openapi.yaml         # API contract
+│   ├── src/test/                       # Backend tests
+│   ├── Dockerfile
+│   └── pom.xml
+│
+├── UniPortalAttendWeb/                 # Lecturer React web portal
+│   ├── src/api/                        # Backend API clients
+│   ├── src/components/                 # Shared UI/layout components
+│   ├── src/features/                   # Dashboard, classes, auth, history...
+│   └── package.json
+│
+├── UniPortalAttendApp/                 # Student native Android app
+│   ├── app/src/main/java/com/ptithcm/attendapp/
+│   │   ├── api/                        # Retrofit definitions/client
+│   │   ├── model/                      # Request/response models
+│   │   ├── view/                       # Activities/fragments/adapters
+│   │   └── viewmodel/
+│   └── app/build.gradle
+│
+├── .github/workflows/backend-ci.yml    # MySQL-backed backend CI
+└── docker-compose.yml                  # MySQL, Redis, Mailpit, backend
 ```
 
 ---
@@ -585,21 +515,44 @@ GitHub Actions workflow:
 
 ### Prerequisites
 
-- JDK 17+
-- Maven Wrapper
-- MySQL 8.x
-- Redis if using Redis-backed infrastructure
-- Node.js for the web portal
-- Android Studio for the Android app
+- Docker Desktop with Docker Compose
+- JDK 17+ for local backend development
+- Node.js/npm for the lecturer portal
+- Android Studio for the student app
 
-### Clone repository
+### Option A — Docker Compose backend environment
+
+From the repository root:
 
 ```bash
-git clone https://github.com/binkadev/Attendance-Check-By-QRcode.git
-cd Attendance-Check-By-QRcode
+docker compose up --build
 ```
 
-### Start backend manually
+Services configured by the repository:
+
+| Service | Local port |
+|---|---:|
+| Spring Boot API | `8081` |
+| MySQL | `3307` |
+| Redis | `6379` |
+| Mailpit web UI | `8025` |
+| Mailpit SMTP | `1025` |
+
+Stop the environment:
+
+```bash
+docker compose down
+```
+
+Remove local database volume as well:
+
+```bash
+docker compose down -v
+```
+
+### Option B — Run the backend with Maven
+
+Start MySQL/Redis/Mailpit as required by the active profile, then run:
 
 ```bash
 cd "backend springboot"
@@ -613,9 +566,9 @@ cd "backend springboot"
 ./mvnw.cmd spring-boot:run -Pdev
 ```
 
-> The backend directory name contains a space: `backend springboot`. Keep quotes around the path in shell commands.
+> The backend folder contains a space, so keep the path quoted in shell commands.
 
-### Start lecturer web portal
+### Run the lecturer web portal
 
 ```bash
 cd UniPortalAttendWeb
@@ -623,155 +576,132 @@ npm install
 npm run dev
 ```
 
-The current web source uses local API URLs such as `http://localhost:8081`. For a cleaner setup, move this to an environment variable such as:
-
-```text
-VITE_API_BASE_URL=http://localhost:8081
-```
-
-### Open Android app
-
-Open the following folder in Android Studio:
-
-```text
-UniPortalAttendApp
-```
-
-Then configure the Retrofit base URL for your local backend environment and run the app on an emulator or physical device.
-
----
-
-## Docker Compose
-
-Root Docker Compose file:
-
-```text
-docker-compose.yml
-```
-
-It provides local infrastructure for:
-
-- MySQL 8
-- Redis 7
-- Mailpit
-- Spring Boot backend container
-
-Run:
+Additional commands:
 
 ```bash
-docker compose up --build
+npm run build
+npm run lint
+npm run preview
 ```
 
-Mailpit UI is available on the configured local port from `docker-compose.yml`.
+The current web client is primarily configured for a backend running at `http://localhost:8081`.
+
+### Run the student Android app
+
+1. Open `UniPortalAttendApp` in Android Studio.
+2. Allow Gradle synchronization to complete.
+3. Configure the Retrofit base URL for the machine/device running the backend.
+4. Run on an Android emulator or physical device with camera permission.
+5. For a physical device, ensure the backend host is reachable from the same network.
 
 ---
 
-## Current integration notes
+## Testing and CI
 
-These notes are intentionally included to keep the repository honest and reviewer-friendly.
+### Backend tests
 
-### 1. Web profile update endpoint
+```bash
+cd "backend springboot"
+./mvnw test
+```
 
-The backend exposes:
+Windows:
+
+```powershell
+cd "backend springboot"
+./mvnw.cmd test
+```
+
+The test suite includes unit/controller/integration-style coverage depending on the module, with Spring Boot Test, MockMvc, Spring Security Test and Testcontainers dependencies available.
+
+### GitHub Actions
+
+Workflow:
 
 ```text
-PATCH /api/v1/me
+.github/workflows/backend-ci.yml
 ```
 
-If the web portal still calls:
+The current CI pipeline:
 
-```text
-PATCH /api/v1/users/me
-```
+1. Runs on push, pull request and manual dispatch.
+2. Starts a MySQL 8 service.
+3. Configures the test database collation.
+4. Uses Temurin JDK 21 while compiling the project for Java 17 bytecode.
+5. Runs the Maven test suite with the test profile.
+6. Prints diagnostic Surefire output when tests fail.
+7. Uploads Surefire reports as workflow artifacts.
 
-update it to use `/api/v1/me`.
-
-### 2. Android QR check-in should send stable device ID
-
-The backend requires `deviceId` for QR check-in. The Android app should send a stable device identifier together with the QR token:
-
-```json
-{
-  "token": "<tokenId.secret>",
-  "deviceId": "<stable-device-id>",
-  "geoLat": 10.0,
-  "geoLng": 106.0
-}
-```
-
-If location is not required by policy, `geoLat` and `geoLng` may be omitted. `deviceId` should still be sent.
-
-### 3. QR expired handling
-
-The Android app should prefer backend error `code` values such as `QR_TOKEN_EXPIRED`, `CHECKIN_CLOSED`, or `QR_TOKEN_NOT_FOR_SESSION` instead of relying only on HTTP status numbers.
-
-### 4. Web dashboard fallback values
-
-Some web UI metrics use fallback/mock-like values when API data is missing. Do not claim fully live analytics until those values are backed consistently by backend responses.
-
-### 5. OpenAPI sync
-
-Recheck the OpenAPI contract after newer endpoint additions so the README, Swagger, backend controllers, and clients tell the same story.
+> Current automated CI is focused on the backend. Dedicated web and Android CI pipelines are future improvements.
 
 ---
 
-## Project scope and honest notes
+## Current scope and limitations
 
-This repository is strongest as a backend-heavy full-stack portfolio project.
+This section is deliberately explicit so the repository remains credible in a CV or technical interview.
 
-Implemented or visible in source:
+### Implemented or clearly represented in source
 
-- Spring Boot REST backend
-- JWT authentication and refresh-token session support
-- MySQL schema managed by Flyway
-- OpenAPI contract
 - Lecturer web portal
 - Student Android app
-- QR-based check-in
-- Class/group/member/session/attendance workflows
-- Absence request workflow
-- Attendance policy surfaces
-- Notification records and delivery surfaces
-- Fraud/check-in attempt monitoring support
-- Docker Compose for local infrastructure
-- GitHub Actions backend CI with MySQL service
+- Spring Boot REST backend
+- JWT authentication and refresh-session persistence
+- MySQL schema managed by Flyway
+- QR session creation, rotation and check-in
+- Device-aware check-in evidence
+- Class, membership, session, attendance and absence workflows
+- Attendance policy, notification and fraud-monitoring surfaces
+- Docker Compose local environment
+- Passing backend CI workflow
 
-Describe carefully:
+### Not claimed
 
-- This is **production-like**, not a deployed production system.
-- Fraud support is monitoring/incident-management support, not an advanced autonomous fraud engine.
-- Notification delivery should be described as API/infrastructure support unless deployment-level delivery behavior is fully verified.
-- Web analytics should not be over-claimed if some UI values are fallback values.
-- Mobile QR check-in integration should be verified after sending stable `deviceId`.
+- A live public production deployment
+- Proven high-scale production traffic
+- Complete observability/operations dashboards
+- Fully autonomous fraud detection
+- Production-grade push notification delivery across all channels
+- Complete end-to-end CI for web and Android
+
+### Known cleanup opportunities
+
+- Move all web API base URLs into environment configuration.
+- Keep client calls and `openapi.yaml` synchronized as endpoints evolve.
+- Replace remaining UI fallback/demo metrics with backend-backed values.
+- Add automated build/lint pipelines for the React and Android clients.
+- Clean up commented diagnostic/legacy code before a formal release.
+- Verify the web profile-update client path against the backend `PATCH /api/v1/me` contract.
 
 ---
 
 ## Roadmap
 
-- Ensure Android QR check-in always sends stable `deviceId`
-- Update web profile API call to `PATCH /api/v1/me`
-- Move web API base URL to environment configuration
-- Recheck and update OpenAPI for all currently implemented endpoints
-- Replace dashboard fallback metrics with backend-backed values
-- Add real product screenshots and a short demo video
-- Add polished architecture and ERD diagrams under `docs/`
-- Add more end-to-end tests for QR check-in, attendance policy, absence workflow, and role permissions
-- Add observability support such as structured logs, metrics, and dashboard examples
-- Document deployment environment matrix if deployed later
+- [ ] Add curated screenshots under `docs/screenshots/`
+- [ ] Add a short end-to-end product demo video
+- [ ] Add a polished ERD and deployment diagram
+- [ ] Environment-drive the web and Android API base URLs
+- [ ] Add React build/lint CI
+- [ ] Add Android unit/build CI
+- [ ] Expand end-to-end integration tests for lecturer-to-student attendance flow
+- [ ] Add structured metrics, tracing and operational dashboards
+- [ ] Reconcile all client/API/OpenAPI contracts before a tagged release
+- [ ] Document a deployment environment only after an actual deployment exists
+
+---
+
+## Portfolio positioning
+
+A precise way to describe this repository on a CV:
+
+> Built a production-like QR attendance platform with a React lecturer portal, native Android student app and Spring Boot/MySQL backend. Implemented JWT sessions, role-aware class workflows, rotating QR validation, idempotent attendance check-in, absence management, device/location evidence, Flyway migrations, OpenAPI documentation and MySQL-backed GitHub Actions CI.
 
 ---
 
 ## Author
 
 **binkadev**  
-PTIT D22
+PTIT — D22
 
 ---
 
-## Reviewer note
-
-The strongest part of this project is the backend domain design: role-based class/session workflows, QR token validation, check-in time-window rules, attendance policy handling, absence request lifecycle, audit-style events, database constraints, and CI-backed testing.
-
-The product story should be presented as:
-
-> **Lecturers manage attendance from the Web Portal. Students check in from the Android App. The Spring Boot backend enforces the rules.**
+> **Lecturers manage attendance from the web. Students check in from Android. The backend enforces the rules.**
